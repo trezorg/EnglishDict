@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello EnglishDictApp!</string>
-    <string name="app_name">EnglishDictApp</string>
+    <string name="app_name">EnglishDict</string>
+    <string name="menu_quit">Exit</string>
+    <string name="menu_add">Add</string>
+    <string name="menu_edit">Edit</string>
+    <string name="menu_delete">Delete</string>
+    <string name="default_rating">0</string>
+    <string name="en_text">En</string>
+    <string name="ru_text">Ru</string>
+    <string name="lang_text">En/Ru</string>
+    <string name="reset">reset</string>
+    <string name="search_hint">Search word</string>
+    <string name="words_add">Add word</string>
+    <string name="image_content_description">Search</string>
 </resources>

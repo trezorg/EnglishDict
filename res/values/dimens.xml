@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="top_panel_padding_top">2dip</dimen>
+    <dimen name="top_panel_padding_size">2dip</dimen>
+    <dimen name="top_panel_padding_bottom">1dip</dimen>
+    <dimen name="button_text_size">25sp</dimen>
+    <dimen name="reload_size">30dip</dimen>
+    <dimen name="search_height">20dip</dimen>
+    <dimen name="search_container_left_padding">3dip</dimen>
+    <dimen name="search_container_top_padding">5dip</dimen>
+    <dimen name="search_round">3dip</dimen>
+    <dimen name="search_shape_padding">3dip</dimen>
+    <dimen name="search_padding">3dip</dimen>
+    <dimen name="add_margin">5dip</dimen>
+    <dimen name="search_image_padding">10dip</dimen>
+</resources>
