@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.util.Log;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 
@@ -22,7 +21,6 @@ import static by.trezor.android.EnglishDictApp.EnglishDictUtils.join;
  */
 public class EnglishDictContentProvider extends ContentProvider {
 
-    private static final String TAG = EnglishDictContentProvider.class.getSimpleName();
     private static final int ENGLISH_WORDS = 1;
     private static final int ENGLISH_WORD_ID = 2;
     private static final int RUSSIAN_WORDS = 3;
@@ -174,8 +172,9 @@ public class EnglishDictContentProvider extends ContentProvider {
             case RUSSIAN_DETAIL_WORD_ID:
                 // query the database for a specific word
                 long wordId = ContentUris.parseId(uri);
-                sqlQuery += " AND T1._id = ?" + wordId;
+                sqlQuery += " AND T1._id = ?";
                 sqlQuery += " ORDER BY " + sortOrder;
+                whereParams.add(Long.toString(wordId));
                 c = db.rawQuery(sqlQuery,
                         whereParams.toArray(new String[whereParams.size()]));
                 break;
@@ -333,11 +332,13 @@ public class EnglishDictContentProvider extends ContentProvider {
         long rowId;
         if (cursor.getCount() == 1) {
             // already exists. get Id
+            cursor.moveToFirst();
             rowId = cursor.getLong(EnglishDictDescriptor.EnglishDictBaseColumns.__ID);
         } else {
             // insert the initialValues into a new database row
             rowId = db.insert(table, null, values);
         }
+        cursor.close();
         if (rowId > 0) {
             Uri wordURi = ContentUris.withAppendedId(contentUri, rowId);
             getContext().getContentResolver().notifyChange(wordURi, null);
@@ -372,6 +373,7 @@ public class EnglishDictContentProvider extends ContentProvider {
         long rId;
         if (cursor.getCount() == 1) {
             // already exists. get Id
+            cursor.moveToFirst();
             rId = cursor.getLong(EnglishDictDescriptor.EnglishDictBaseColumns.__ID);
         } else {
             // insert the initialValues into a new database row
@@ -387,10 +389,12 @@ public class EnglishDictContentProvider extends ContentProvider {
                 RELATION_TABLE_NAME, null, contentValuesToSql(values),
                 null,  null, null, null);
         if (cursor.getCount() == 1) {
+            cursor.moveToFirst();
             cursor.getLong(EnglishDictDescriptor.EnglishDictBaseColumns.__ID);
         } else {
             db.insert(RELATION_TABLE_NAME, null, values);
         }
+        cursor.close();
         if (rId > 0) {
             Uri wordURi = ContentUris.withAppendedId(uri, rId);
             getContext().getContentResolver().notifyChange(wordURi, null);

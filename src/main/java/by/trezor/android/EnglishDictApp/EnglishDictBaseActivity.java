@@ -1,6 +1,7 @@
 package by.trezor.android.EnglishDictApp;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.DisplayMetrics;
@@ -54,7 +56,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             @Override
             protected void onStartLoading() {
                 super.onStartLoading();
-                showProgressDialog();
+                showProgressBar();
             }
         };
     }
@@ -68,7 +70,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             // the queried Cursor with the SimpleCursorAdapter.
             mAdapter.swapCursor(cursor);
         }
-        dismissProgressDialog();
+        dismissProgressBar();
     }
 
     @Override
@@ -77,7 +79,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         // Remove any references to the old data by replacing it with
         // a null Cursor.
         mAdapter.swapCursor(null);
-        dismissProgressDialog();
+        dismissProgressBar();
     }
 
     @Override
@@ -113,14 +115,14 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         Uri uri = getContentUri();
         switch (item.getItemId()) {
             case R.id.popup_menu_delete:
-                showProgressDialog();
+                showProgressBar();
                 c = ((Cursor)(getListAdapter().getItem(info.position)));
                 wordID = c.getInt(1);
                 uri = ContentUris.withAppendedId(uri, wordID);
                 getContentResolver().delete(uri, null, null);
                 return true;
             case R.id.popup_menu_edit:
-                showProgressDialog();
+                showProgressBar();
                 c = ((Cursor)(getListAdapter().getItem(info.position)));
                 wordID = c.getInt(1);
                 String word = c.getString(0);
@@ -142,14 +144,14 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         res.updateConfiguration(conf, dm);
     }
 
-    void showProgressDialog() {
+    void showProgressBar() {
         if (mProgressBar == null) {
-            mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+            mProgressBar = (ProgressBar)findViewById(R.id.progress_bar);
         }
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
-    void dismissProgressDialog() {
+    void dismissProgressBar() {
         if (mProgressBar != null) {
             mProgressBar.setVisibility(View.INVISIBLE);
         }
@@ -204,7 +206,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         String text = editText.getText().toString();
                         if (!text.isEmpty()) {
                             //save
-                            showProgressDialog();
+                            showProgressBar();
                             ContentValues values = new ContentValues();
                             values.put("word", text);
                             Uri uri = ContentUris.withAppendedId(getContentUri(), wordId);
@@ -235,7 +237,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         String text = editText.getText().toString();
                         if (!text.isEmpty()) {
                             //add
-                            showProgressDialog();
+                            showProgressBar();
                             performAddActions(text);
                         }
                     }
@@ -245,6 +247,42 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             }
         });
         builder.show();
+    }
+
+    Uri getSecondaryContentUri(int type, long id) {
+        Uri uri;
+        switch (type) {
+            case ENGLISH_WORDS:
+                uri = EnglishDictDescriptor.EnglishDictDetailEnglishWords.CONTENT_URI;
+                break;
+            case RUSSIAN_WORDS:
+                uri = EnglishDictDescriptor.EnglishDictDetailRussianWords.CONTENT_URI;
+                Log.d(TAG, uri.toString());
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
+        return Uri.parse(uri + "?" +
+                EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_RELATION_NAME +
+                "=" + id);
+    }
+
+    Uri getMainContentUri(int type, String search) {
+        Uri uri;
+        switch (type) {
+            case ENGLISH_WORDS:
+                uri = EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+                break;
+            case RUSSIAN_WORDS:
+                uri = EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
+        if (search == null || search.isEmpty()) { return uri; }
+        String queryString = EnglishDictDescriptor.
+                EnglishDictBaseColumns.QUERY_PARAM_NAME + "=" + Uri.encode(search);
+        return Uri.parse(uri + "?" + queryString);
     }
 
     private Bundle getSearchBundle(String query) {
@@ -282,6 +320,77 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         }
         mToast.show();
     }
+
+    class AddWordResult<String, Long> {
+
+        private String word;
+        private Long id;
+
+        AddWordResult(String word, Long id) {
+            this.word = word;
+            this.id = id;
+        }
+
+        public String getWord() {
+            return word;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+    }
+
+    public interface OnExecuteListener {
+        void onExecute(AddWordResult<String, Long> result);
+        AddWordResult<String, Long> onBackground(String word);
+    }
+
+    class AddWordAsyncTask extends AsyncTask<Void, Void, AddWordResult<String, Long>> {
+
+        private ProgressDialog progressDialog;
+        private Context context;
+        private String word;
+        private OnExecuteListener mOnFinishListener;
+
+        AddWordAsyncTask (Context context, String word) {
+            super();
+            this.context = context;
+            this.word = word;
+        }
+
+        public AddWordAsyncTask setOnQueryTextListener(OnExecuteListener listener) {
+            mOnFinishListener = listener;
+            return this;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dismissProgressBar();
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setTitle(word);
+            progressDialog.setMessage("Processing...");
+            progressDialog.show();
+        }
+
+        @Override
+        protected AddWordResult<String, Long> doInBackground(Void... args) {
+            if (mOnFinishListener != null) {
+                return mOnFinishListener.onBackground(word);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(AddWordResult<String, Long> result) {
+            progressDialog.dismiss();
+            if (mOnFinishListener != null) {
+                mOnFinishListener.onExecute(result);
+            }
+        }
+    }
+
+    abstract AddWordResult<String, Long> performAddAsync(String text);
 
     abstract void performAddActions(String text);
 

@@ -13,4 +13,6 @@
     <string name="search_hint">Search word</string>
     <string name="words_add">Add word</string>
     <string name="image_content_description">Search</string>
+    <string name="translateClientId">polymetr</string>
+    <string name="translateClientKey">RxaztEaI7bGU8rusQfgw1AC0tWwsHfCqkTytW6y/AB8=</string>
 </resources>

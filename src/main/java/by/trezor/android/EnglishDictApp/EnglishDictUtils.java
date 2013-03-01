@@ -7,6 +7,8 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 
@@ -15,6 +17,12 @@ public class EnglishDictUtils {
     private static final String TAG = EnglishDictUtils.class.getSimpleName();
     public static final int ENGLISH_WORDS = 0;
     public static final int RUSSIAN_WORDS = 1;
+    public static final String ENGLISH_WORDS_NAME = "en";
+    public static final String RUSSIAN_WORDS_NAME = "ru";
+    public static final Map<Integer, String> LANG_MAP = new HashMap<Integer, String>() {{
+        put(ENGLISH_WORDS, ENGLISH_WORDS_NAME);
+        put(RUSSIAN_WORDS, RUSSIAN_WORDS_NAME);
+    }};
     static final private String RUSSIAN_LETTERS =
             "[-,абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]";
     static final private String ENGLISH_LETTERS =
@@ -91,4 +99,22 @@ public class EnglishDictUtils {
     static public String replaceNotExpectedPattern(String text, Pattern pattern) {
         return replaceNotExpectedPattern(text, pattern, null);
     }
+
+    static public String translate(String clientId, String clientKey, String text, int from, int to) {
+        EnglishDictBingTranslate trans = new EnglishDictBingTranslate(clientId, clientKey);
+        try {
+            return trans.translate(text, LANG_MAP.get(from), LANG_MAP.get(to));
+        } catch (Exception ex) {
+            Log.d(TAG, "Translate error", ex);
+            return null;
+        }
+    }
+
+    static public String translate(Context context, String text, int from) {
+        int to = from == ENGLISH_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS;
+        String clientId = context.getResources().getString(R.string.translateClientId);
+        String clientKey = context.getResources().getString(R.string.translateClientKey);
+        return translate(clientId, clientKey, text, from, to);
+    }
+
 }

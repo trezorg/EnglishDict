@@ -1,12 +1,11 @@
 package by.trezor.android.EnglishDictApp;
 
 import android.content.*;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.*;
-import android.widget.*;
-import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+
 import com.actionbarsherlock.app.ActionBar;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
@@ -22,7 +21,6 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        Log.i(TAG, "OnCreate");
         Intent intent = getIntent();
         long id = intent.getLongExtra("id", -1);
         if (id == -1) {
@@ -70,10 +68,36 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
         actionBar.setIcon(lang == RUSSIAN_WORDS ? R.drawable.ic_usa: R.drawable.ic_russian);
     }
 
-    void performAddActions(String text) {
+    AddWordResult<String, Long> performAddAsync(String text) {
         ContentValues values = new ContentValues();
         values.put("word", text);
-        getContentResolver().insert(getContentUri(), values);
+        Uri uri = getContentResolver().insert(getContentUri(), values);
+        Cursor c = getContentResolver().query(uri, null, null, null, null);
+        c.moveToFirst();
+        long wordId = c.getInt(0);
+        String word = c.getString(1);
+        Log.i(TAG, String.format("Added word " + word));
+        c.close();
+        return new AddWordResult<String, Long>(word, wordId);
+    }
+
+
+    void performAddActions(final String text) {
+        new AddWordAsyncTask(this, text).setOnQueryTextListener(new OnExecuteListener() {
+            @Override
+            public void onExecute(AddWordResult<String, Long> result) {
+                if (result == null) {
+                    showToast("Word " + text + " do not exist.");
+                }
+            }
+            @Override
+            public AddWordResult<String, Long> onBackground(String word) {
+                if (word != null && !word.isEmpty()) {
+                    return performAddAsync(word);
+                }
+                return null;
+            }
+        }).execute();
     }
 
     private void setCurrentLangType(int type) {
@@ -89,21 +113,7 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
     }
 
     private Uri getContentUri(int type, long id) {
-        Uri uri;
-        switch (type) {
-            case ENGLISH_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictDetailEnglishWords.CONTENT_URI;
-                break;
-            case RUSSIAN_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictDetailRussianWords.CONTENT_URI;
-                Log.d(TAG, uri.toString());
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown type: " + type);
-        }
-        return Uri.parse(uri + "?" +
-                EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_RELATION_NAME +
-                "=" + id);
+        return getSecondaryContentUri(type, id);
     }
 
     Uri getContentUri() {
