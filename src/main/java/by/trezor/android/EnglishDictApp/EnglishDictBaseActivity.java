@@ -103,7 +103,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
 
     @Override
     public boolean onContextItemSelected(android.view.MenuItem item) {
-        AdapterView.AdapterContextMenuInfo info;
+        final AdapterView.AdapterContextMenuInfo info;
         try {
             info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         } catch (ClassCastException e) {
@@ -112,14 +112,20 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         }
         Cursor c;
         int wordID;
-        Uri uri = getContentUri();
+        final Uri uri = getContentUri();
         switch (item.getItemId()) {
             case R.id.popup_menu_delete:
                 showProgressBar();
-                c = ((Cursor)(getListAdapter().getItem(info.position)));
-                wordID = c.getInt(1);
-                uri = ContentUris.withAppendedId(uri, wordID);
-                getContentResolver().delete(uri, null, null);
+                new AsyncTask<Void, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Void... args) {
+                        Cursor cursor = ((Cursor)(getListAdapter().getItem(info.position)));
+                        int wordID = cursor.getInt(1);
+                        getContentResolver().delete(
+                                ContentUris.withAppendedId(uri, wordID), null, null);
+                        return null;
+                    }
+                }.execute();
                 return true;
             case R.id.popup_menu_edit:
                 showProgressBar();
@@ -127,6 +133,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                 wordID = c.getInt(1);
                 String word = c.getString(0);
                 showEditWordActivity(wordID, word);
+                dismissProgressBar();
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -190,7 +197,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         return text;
     }
 
-    void showEditWordActivity(final int wordId, String word) {
+    void showEditWordActivity(final int wordId, final String word) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogLayout = inflater.inflate(
@@ -203,16 +210,21 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        String text = editText.getText().toString();
-                        if (!text.isEmpty()) {
+                        final String text = editText.getText().toString();
+                        if (!text.isEmpty() && !text.equals(word)) {
                             //save
                             showProgressBar();
-                            ContentValues values = new ContentValues();
-                            values.put("word", text);
-                            Uri uri = ContentUris.withAppendedId(getContentUri(), wordId);
-                            getContentResolver().update(uri, values, null, null);
-                            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                            hideVirtualKeyboard(editText);
+                            new AsyncTask<Void, Void, Void>() {
+                                @Override
+                                protected Void doInBackground(Void... args) {
+                                    ContentValues values = new ContentValues();
+                                    values.put("word", text);
+                                    Uri uri = ContentUris.withAppendedId(getContentUri(), wordId);
+                                    getContentResolver().update(uri, values, null, null);
+                                    return null;
+                                }
+                            }.execute();
                         }
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -238,15 +250,21 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         if (!text.isEmpty()) {
                             //add
                             showProgressBar();
+                            hideVirtualKeyboard(editText);
                             performAddActions(text);
                         }
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int whichButton) {
-            }
+            public void onClick(DialogInterface dialog, int whichButton) {}
         });
         builder.show();
+    }
+
+    private void hideVirtualKeyboard(EditText editText) {
+        InputMethodManager imm = (InputMethodManager)getSystemService(
+                Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
 
     Uri getSecondaryContentUri(int type, long id) {
