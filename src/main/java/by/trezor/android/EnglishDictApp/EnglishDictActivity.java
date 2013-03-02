@@ -36,9 +36,6 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
         setViewAdapter();
         handleIntent(getIntent());
         registerForContextMenu(getListView());
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowHomeEnabled(false);
-        actionBar.setDisplayShowTitleEnabled(false);
     }
 
     @Override
@@ -157,6 +154,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
         enMenuItem.setEnabled(langType != ENGLISH_WORDS);
         ruMenuItem.setEnabled(langType != RUSSIAN_WORDS);
         (langType == RUSSIAN_WORDS ? ruMenuItem : enMenuItem).setChecked(true);
+        prepareActionBar();
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -286,6 +284,13 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
         type = type == RUSSIAN_WORDS ? RUSSIAN_WORDS: ENGLISH_WORDS;
         setCurrentLangType(type);
         setAdapterCursor();
+    }
+
+    private void prepareActionBar() {
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setIcon(getCurrentLangType() == RUSSIAN_WORDS ?
+                R.drawable.ic_russian: R.drawable.ic_usa);
     }
 
     private int getLangType(Bundle state) {
