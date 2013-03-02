@@ -50,7 +50,7 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
     public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_add:
-                showAddWordActivity();
+                getAddAlertDialog();
                 return true;
             case android.R.id.home:
                 finish();

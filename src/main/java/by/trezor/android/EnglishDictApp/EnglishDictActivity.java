@@ -1,5 +1,6 @@
 package by.trezor.android.EnglishDictApp;
 
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
@@ -181,7 +182,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
                 collapseSearchView();
                 return true;
             case R.id.menu_add:
-                showAddWordActivity();
+                getAddAlertDialog();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

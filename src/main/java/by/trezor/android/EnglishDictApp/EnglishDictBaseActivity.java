@@ -2,16 +2,14 @@ package by.trezor.android.EnglishDictApp;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.DialogInterface;
+import android.content.*;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -25,6 +23,7 @@ import android.text.Spanned;
 import android.view.inputmethod.InputMethodManager;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -35,6 +34,8 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = EnglishDictBaseActivity.class.getSimpleName();
+    protected static final int RESULT_SPEECH = 1013;
+    private AlertDialog mAddAlertDialog;
     private SimpleCursorAdapter mAdapter;
     private Toast mToast;
     private ProgressBar mProgressBar;
@@ -140,6 +141,40 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case RESULT_SPEECH: {
+                if (resultCode == RESULT_OK && data != null) {
+                    ArrayList<String> text =
+                            data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    createSpeachChoiceDialog(text);
+                }
+                break;
+            }
+
+        }
+    }
+
+    void createSpeachChoiceDialog(final ArrayList<String> text) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        CharSequence[] choice = text.toArray(new CharSequence[text.size()]);
+        builder.setTitle("Choice variant").
+                setSingleChoiceItems(choice, 0, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String word = text.get(which);
+                AlertDialog alertDialog = getAddAlertDialog();
+                EditText editText = (EditText)
+                        alertDialog.findViewById(R.id.add_popup_input);
+                editText.setText(word);
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
+
     void setInputLanguage() {
         String langCode = getCurrentLangType() == ENGLISH_WORDS ? "EN" : "RU";
         Resources res = getResources();
@@ -166,6 +201,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
 
     String getCurrentLangName() {
         return getCurrentLangType() == RUSSIAN_WORDS ? "russian": "english";
+    }
+
+    String getIETFLanguage() {
+        return getCurrentLangType() == RUSSIAN_WORDS ? "ru-RU": "en-US";
     }
 
     InputFilter getInputFilter() {
@@ -197,7 +236,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         return text;
     }
 
-    void showEditWordActivity(final int wordId, final String word) {
+    AlertDialog showEditWordActivity(final int wordId, final String word) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogLayout = inflater.inflate(
@@ -228,19 +267,39 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         }
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int whichButton) {}
-        });
-        builder.show();
+                    @Override
+                    public void onClick(DialogInterface dialog, int whichButton) {}
+                });
+        return builder.show();
     }
 
-    void showAddWordActivity() {
+    AlertDialog showAddWordActivity() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogLayout = inflater.inflate(
                 R.layout.english_dict_add_popup, null, false);
-        final EditText editText = (EditText) dialogLayout.findViewById(R.id.add_popup_input);
+        final ImageButton btnSpeak = (ImageButton)
+                dialogLayout.findViewById(R.id.btnSpeak);
+        final EditText editText = (EditText)
+                dialogLayout.findViewById(R.id.add_popup_input);
         editText.setFilters(new InputFilter[]{getInputFilter()});
+        btnSpeak.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(
+                        RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getIETFLanguage());
+                intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
+                try {
+                    startActivityForResult(intent, RESULT_SPEECH);
+                    editText.setText("");
+                } catch (ActivityNotFoundException a) {
+                    showToast("Opps! Your device doesn't support Speech to Text");
+                }
+            }
+        });
         builder.setView(dialogLayout)
                 .setTitle("Enter a word")
                 .setPositiveButton("Add", new DialogInterface.OnClickListener() {
@@ -253,12 +312,15 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                             hideVirtualKeyboard(editText);
                             performAddActions(text);
                         }
+                        mAddAlertDialog = null;
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int whichButton) {}
-        });
-        builder.show();
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        mAddAlertDialog = null;
+                    }
+                });
+        return builder.show();
     }
 
     private void hideVirtualKeyboard(EditText editText) {
@@ -406,6 +468,15 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                 mOnFinishListener.onExecute(result);
             }
         }
+    }
+
+    AlertDialog getAddAlertDialog() {
+        if (mAddAlertDialog == null) {
+            mAddAlertDialog = showAddWordActivity();
+        } else {
+            mAddAlertDialog.show();
+        }
+        return mAddAlertDialog;
     }
 
     abstract AddWordResult<String, Long> performAddAsync(String text);
