@@ -1,6 +1,5 @@
 package by.trezor.android.EnglishDictApp;
 
-import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
@@ -9,7 +8,6 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.*;
-import android.widget.*;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -232,23 +230,6 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
         Log.i(TAG, String.format("Added word " + trans));
         c.close();
         return new AddWordResult<String, Long>(word, wordId);
-    }
-
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
-        showSecondaryActivity(word, id);
-    }
-
-    private void showSecondaryActivity(String word, long  id) {
-        Bundle bundle = new Bundle();
-        bundle.putLong("id", id);
-        bundle.putInt("langType", getCurrentLangType() == 0 ? 1 : 0);
-        bundle.putString("word", word);
-        Intent intent = new Intent(this, EnglishDictDetailActivity.class);
-        intent.putExtras(bundle);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
     }
 
     private Uri getContentUri(int type, String search) {

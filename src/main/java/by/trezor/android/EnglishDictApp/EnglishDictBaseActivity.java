@@ -157,6 +157,23 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         }
     }
 
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
+        showSecondaryActivity(word, id);
+    }
+
+    void showSecondaryActivity(String word, long  id) {
+        Bundle bundle = new Bundle();
+        bundle.putLong("id", id);
+        bundle.putInt("langType", getCurrentLangType() == 0 ? 1 : 0);
+        bundle.putString("word", word);
+        Intent intent = new Intent(this, EnglishDictDetailActivity.class);
+        intent.putExtras(bundle);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
+
     void createSpeachChoiceDialog(final ArrayList<String> text) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         CharSequence[] choice = text.toArray(new CharSequence[text.size()]);
