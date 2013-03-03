@@ -16,14 +16,15 @@
         android:minHeight="30dip"
         android:layout_marginRight="6dip"
         android:indeterminate="true"
-        android:layout_centerInParent="true" />
+        android:layout_centerInParent="true"
+        />
 
     <ListView
         android:id="@android:id/list"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        >
     </ListView>
 
 </RelativeLayout>
