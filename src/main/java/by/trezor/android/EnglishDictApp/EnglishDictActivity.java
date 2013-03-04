@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.*;
 import com.actionbarsherlock.app.ActionBar;
@@ -16,7 +17,7 @@ import com.actionbarsherlock.widget.SearchView;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 
-public class EnglishDictActivity extends EnglishDictBaseActivity {
+public class EnglishDictActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {
 
     private static final String TAG = EnglishDictActivity.class.getSimpleName();
     private static final String LIST_STATE = "listState";
@@ -34,6 +35,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
         setContentView(R.layout.english_dict_list);
         setViewAdapter();
         handleIntent(getIntent());
+        setTabs();
         registerForContextMenu(getListView());
     }
 
@@ -41,21 +43,6 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
     protected void onNewIntent(Intent intent) {
         setIntent(intent);
         handleIntent(intent);
-    }
-
-    private void handleIntent(Intent intent) {
-        String query = null;
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            query = intent.getStringExtra(SearchManager.QUERY);
-            collapseSearchView();
-        }
-        restartLoader(query);
-    }
-
-    private void collapseSearchView() {
-        if (mSearchMenuItem != null) {
-            mSearchMenuItem.collapseActionView();
-        }
     }
 
     @Override
@@ -185,6 +172,46 @@ public class EnglishDictActivity extends EnglishDictBaseActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction transaction) {
+    }
+
+    @Override
+    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction transaction) {
+    }
+
+    @Override
+    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction transaction) {
+    }
+
+
+    private void handleIntent(Intent intent) {
+        String query = null;
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            query = intent.getStringExtra(SearchManager.QUERY);
+            collapseSearchView();
+        }
+        restartLoader(query);
+    }
+
+    private void collapseSearchView() {
+        if (mSearchMenuItem != null) {
+            mSearchMenuItem.collapseActionView();
+        }
+    }
+
+    void setTabs() {
+        getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+        ActionBar.Tab dictTab = getSupportActionBar().newTab();
+        dictTab.setText(R.string.dict_tab_text);
+        dictTab.setTabListener(this);
+        getSupportActionBar().addTab(dictTab);
+        ActionBar.Tab trainingTab = getSupportActionBar().newTab();
+        trainingTab.setText(R.string.training_tab_text);
+        trainingTab.setTabListener(this);
+        getSupportActionBar().addTab(trainingTab);
     }
 
     void performAddActions(final String text) {

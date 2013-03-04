@@ -16,6 +16,7 @@
         android:minHeight="30dip"
         android:layout_marginRight="6dip"
         android:indeterminate="true"
+        android:visibility="invisible"
         android:layout_centerInParent="true"
         />
 

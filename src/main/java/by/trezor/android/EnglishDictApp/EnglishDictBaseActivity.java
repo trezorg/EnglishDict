@@ -220,9 +220,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         return getCurrentLangType() == RUSSIAN_WORDS ? "russian": "english";
     }
 
-    Locale getLocale() {
-        return getCurrentLangType() == RUSSIAN_WORDS
-                ? new Locale("ru","RU"): new Locale("en","EN");
+    String getIETFLocale() {
+        return (getCurrentLangType() == RUSSIAN_WORDS
+                ? new Locale("ru","RU"): new Locale("en","US")
+        ).toString().replace("_", "-");
     }
 
     InputFilter getInputFilter() {
@@ -308,8 +309,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                         RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
-                        getLocale().toString());
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, getIETFLocale());
                 intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
                 try {
                     startActivityForResult(intent, RESULT_SPEECH);
