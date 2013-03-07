@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <stroke
+                android:width="1dip"
+                android:color="#FFFFFF"
+                />
+            <corners
+                android:radius="1dip"
+                />
+            <padding
+                android:left="2dip"
+                android:top="2dip"
+                android:right="2dip"
+                android:bottom="2dip"
+                />
+        </shape>
+    </item>
+    <item>
+        <bitmap
+            android:src="@drawable/ic_sound_pressed"
+            android:tileMode="disabled"
+            android:scaleType="fitXY"
+            android:gravity="center"
+            />
+    </item>
+</layer-list>

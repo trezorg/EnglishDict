@@ -6,6 +6,7 @@ import android.content.*;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -438,6 +439,45 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             return id;
         }
 
+    }
+
+    private void setVolume(int percent) {
+        AudioManager audioManager =
+                (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int volume = (maxVolume * percent) / 100;
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+    }
+
+    public void playSound(final View view) {
+        final LinearLayout parent = (LinearLayout)view.getParent();
+        final ProgressBar progressBar = (ProgressBar)parent.findViewById(
+                R.id.progress_bar_sound);
+        final int position = getListView().getPositionForView(
+                (LinearLayout)view.getParent());
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected void onPreExecute() {
+                progressBar.setVisibility(View.VISIBLE);
+                view.setVisibility(View.GONE);
+                setVolume(70);
+            }
+            @Override
+            protected Void doInBackground(Void... args) {
+                String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
+                if (word ==  null || word.isEmpty()) { return  null; }
+                String [] words = word.split("\\s+");
+                for (String w: words) {
+                    EnglishDictGoogleVoice.getInstance().play(w);
+                }
+                return null;
+            }
+            @Override
+            protected void onPostExecute(Void result) {
+                progressBar.setVisibility(View.GONE);
+                view.setVisibility(View.VISIBLE);
+            }
+        }.execute();
     }
 
     public interface OnExecuteListener {

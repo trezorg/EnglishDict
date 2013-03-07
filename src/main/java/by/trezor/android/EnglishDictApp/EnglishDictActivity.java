@@ -9,6 +9,7 @@ import android.os.Parcelable;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.*;
+import android.widget.ListView;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -37,6 +38,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         handleIntent(getIntent());
         setTabs();
         registerForContextMenu(getListView());
+        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     }
 
     @Override

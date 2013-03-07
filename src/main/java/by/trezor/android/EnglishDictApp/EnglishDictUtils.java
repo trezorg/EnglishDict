@@ -2,11 +2,14 @@ package by.trezor.android.EnglishDictApp;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -117,4 +120,51 @@ public class EnglishDictUtils {
         return translate(clientId, clientKey, text, from, to);
     }
 
+    static public String prepareFilePath(String fileName, String dir)
+            throws IOException {
+        File dictionaryRoot = new File(
+                Environment.getExternalStorageDirectory(), dir);
+        File dictionaryDirFile = new File(dictionaryRoot, fileName.substring(0,1));
+        if (!dictionaryDirFile.exists()) {
+            if (!dictionaryDirFile.mkdirs()) {
+                throw new IOException("Cannot create directory: " + dictionaryDirFile);
+            }
+        }
+        return new File(dictionaryDirFile, fileName + ".mp3").getAbsolutePath();
+    }
+
+    static public String downloadFile(String downloadUrl, String fileName, String dir)
+            throws IOException {
+        URL url = new URL(downloadUrl);
+        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        urlConnection.setRequestMethod("GET");
+        urlConnection.setDoOutput(true);
+        urlConnection.connect();
+        int code = urlConnection.getResponseCode();
+        if (code > 300 || code == -1) {
+            throw new IOException("Cannot read url: " + downloadUrl);
+        }
+        String filePath = prepareFilePath(fileName, dir);
+        FileOutputStream fileOutput = new FileOutputStream(filePath);
+        BufferedInputStream inputStream =
+                new BufferedInputStream(urlConnection.getInputStream());
+        byte[] buffer = new byte[1024];
+        int bufferLength;
+        while ((bufferLength = inputStream.read(buffer)) > 0) {
+            fileOutput.write(buffer, 0, bufferLength);
+        }
+        fileOutput.close();
+        return filePath;
+    }
+
+    static public String checkFile(String fileName, String dir) {
+        File dictionaryRoot = new File(
+                Environment.getExternalStorageDirectory(), dir);
+        File dictionaryFile = new File(dictionaryRoot, fileName.substring(0,1));
+        File filePath = new File(dictionaryFile, fileName + ".mp3");
+        if (filePath.exists()) {
+            return filePath.getAbsolutePath();
+        }
+        return null;
+    }
 }
