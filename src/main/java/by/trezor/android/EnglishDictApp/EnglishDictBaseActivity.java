@@ -395,15 +395,22 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
     }
 
     void restartLoader(String query) {
+        setViewAdapter();
         getSupportLoaderManager().restartLoader(
                 getLoaderId(), getSearchBundle(query), this);
+    }
+
+    private int getListItem() {
+        return getCurrentLangType() == RUSSIAN_WORDS ?
+                R.layout.english_dict_list_item_ru :
+                R.layout.english_dict_list_item_en;
     }
 
     void setViewAdapter() {
         int[] viewIds = new int[] { R.id.english_dict_word };
         mAdapter = new SimpleCursorAdapter(
                 this,
-                R.layout.english_dict_list_item,
+                getListItem(),
                 null,
                 getProjection(),
                 viewIds,

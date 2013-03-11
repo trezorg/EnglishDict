@@ -1,10 +1,8 @@
 package by.trezor.android.EnglishDictApp;
 
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
 
-import java.io.File;
 import java.io.IOException;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.checkFile;
