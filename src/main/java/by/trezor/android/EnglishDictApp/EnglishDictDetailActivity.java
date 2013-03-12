@@ -1,5 +1,6 @@
 package by.trezor.android.EnglishDictApp;
 
+import android.app.Activity;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
@@ -130,5 +131,9 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
 
     int getLoaderId() {
         return LOADER_ID;
+    }
+
+    Activity getActivity() {
+        return this;
     }
 }

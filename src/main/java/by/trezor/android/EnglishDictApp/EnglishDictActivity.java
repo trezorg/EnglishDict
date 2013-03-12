@@ -1,5 +1,6 @@
 package by.trezor.android.EnglishDictApp;
 
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
@@ -291,17 +292,26 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         return LOADER_ID;
     }
 
+    Activity getActivity() {
+        return this;
+    }
+
     private void saveCurrentLangType(int type) {
         type = type == RUSSIAN_WORDS ? RUSSIAN_WORDS: ENGLISH_WORDS;
         setCurrentLangType(type);
+        setViewAdapter();
         setAdapterCursor();
+    }
+
+    private int getLangIcon() {
+        return getCurrentLangType() == RUSSIAN_WORDS ?
+                R.drawable.ic_russian: R.drawable.ic_usa;
     }
 
     private void prepareActionBar() {
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setIcon(getCurrentLangType() == RUSSIAN_WORDS ?
-                R.drawable.ic_russian: R.drawable.ic_usa);
+        actionBar.setIcon(getLangIcon());
     }
 
     private int getLangType(Bundle state) {

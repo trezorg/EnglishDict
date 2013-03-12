@@ -1,5 +1,6 @@
 package by.trezor.android.EnglishDictApp;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.*;
@@ -395,7 +396,6 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
     }
 
     void restartLoader(String query) {
-        setViewAdapter();
         getSupportLoaderManager().restartLoader(
                 getLoaderId(), getSearchBundle(query), this);
     }
@@ -458,10 +458,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
 
     public void playSound(final View view) {
         final LinearLayout parent = (LinearLayout)view.getParent();
-        final ProgressBar progressBar = (ProgressBar)parent.findViewById(
-                R.id.progress_bar_sound);
-        final int position = getListView().getPositionForView(
-                (LinearLayout)view.getParent());
+        final ProgressBar progressBar =
+                (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
+        final int position =
+                getListView().getPositionForView((LinearLayout)view.getParent());
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected void onPreExecute() {
@@ -474,15 +474,33 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                 String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
                 if (word ==  null || word.isEmpty()) { return  null; }
                 String [] words = word.split("\\s+");
-                for (String w: words) {
-                    EnglishDictGoogleVoice.getInstance().play(w);
+                EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
+                final Activity activity = getActivity();
+                voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
+                    @Override
+                    public void onExecute() {
+                        activity.runOnUiThread(new Runnable() {
+                            public void run() {
+                                progressBar.setVisibility(View.GONE);
+                                view.setVisibility(View.VISIBLE);
+                            }
+                        });
+                    }
+                });
+                if (voice.getOnErrorListener() == null) {
+                    voice.setOnErrorListener(new EnglishDictGoogleVoice.OnErrorListener() {
+                        @Override
+                        public void onError(final String message) {
+                            activity.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    showToast(message);
+                                }
+                            });
+                        }
+                    });
                 }
+                voice.play(words);
                 return null;
-            }
-            @Override
-            protected void onPostExecute(Void result) {
-                progressBar.setVisibility(View.GONE);
-                view.setVisibility(View.VISIBLE);
             }
         }.execute();
     }
@@ -544,6 +562,8 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         }
         return mAddAlertDialog;
     }
+
+    abstract Activity getActivity();
 
     abstract AddWordResult<String, Long> performAddAsync(String text);
 
