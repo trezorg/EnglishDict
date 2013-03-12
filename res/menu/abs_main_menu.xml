@@ -38,15 +38,15 @@
         </menu>
     </item>
     <item
-        android:id="@+id/menu_quit"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"
-        android:title="@string/menu_quit"
-        android:showAsAction="never"
-        />
-    <item
         android:id="@+id/menu_add"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/menu_add"
+        android:showAsAction="always"
+        />
+    <item
+        android:id="@+id/menu_quit"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:title="@string/menu_quit"
         android:showAsAction="never"
         />
 </menu>

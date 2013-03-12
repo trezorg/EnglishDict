@@ -9,7 +9,7 @@
     <string name="en_text">En</string>
     <string name="ru_text">Ru</string>
     <string name="lang_text">En/Ru</string>
-    <string name="reset">reset</string>
+    <string name="reset">Reset</string>
     <string name="search_hint">Search word</string>
     <string name="words_add">Add word</string>
     <string name="speak">Speak</string>

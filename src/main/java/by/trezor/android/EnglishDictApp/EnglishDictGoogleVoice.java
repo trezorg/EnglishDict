@@ -168,9 +168,7 @@ public class EnglishDictGoogleVoice {
             public void onCompletion(MediaPlayer mp) {
                 if (mediaQueue.isEmpty()) {
                     onFinish();
-                } else {
-                    onStart();
-                }
+                } else { onStart(); }
             }
         });
         mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){

@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
+import android.view.WindowManager;
 import com.actionbarsherlock.app.ActionBar;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
@@ -38,6 +39,7 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
         restartLoader(null);
         prepareActionBar(word, langType);
         registerForContextMenu(getListView());
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
     @Override

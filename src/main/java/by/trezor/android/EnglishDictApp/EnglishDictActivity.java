@@ -40,6 +40,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         setTabs();
         registerForContextMenu(getListView());
         getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
     @Override
@@ -77,7 +78,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(final Menu menu) {
         MenuInflater inflate = getSupportMenuInflater();
         inflate.inflate(R.menu.abs_main_menu, menu);
         SearchManager searchManager =
@@ -91,13 +92,13 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 // Do something when collapsed
                 // Return true to collapse action view
+                showActionBarIcons(menu);
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
-                // Do something when expanded
-                // Return true to expand action view
+                hideActionBarIcons(menu);
                 return true;
             }
         });
@@ -189,6 +190,17 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction transaction) {
     }
 
+    private void hideActionBarIcons(Menu menu) {
+        menu.findItem(R.id.menu_reload).setVisible(false);
+        menu.findItem(R.id.menu_lang).setVisible(false);
+        menu.findItem(R.id.menu_add).setVisible(false);
+    }
+
+    private void showActionBarIcons(Menu menu) {
+        menu.findItem(R.id.menu_reload).setVisible(true);
+        menu.findItem(R.id.menu_lang).setVisible(true);
+        menu.findItem(R.id.menu_add).setVisible(true);
+    }
 
     private void handleIntent(Intent intent) {
         String query = null;
