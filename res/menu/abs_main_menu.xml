@@ -49,4 +49,10 @@
         android:title="@string/menu_quit"
         android:showAsAction="never"
         />
+    <item
+        android:id="@+id/menu_settings"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="@string/menu_settings"
+        android:showAsAction="never"
+        />
 </menu>

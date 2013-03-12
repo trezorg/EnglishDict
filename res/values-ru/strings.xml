@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="menu_quit">Выход</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_add">Добавить</string>
+    <string name="menu_edit">Редактировать</string>
+    <string name="menu_delete">Удалить</string>
+    <string name="russian_name">русский</string>
+    <string name="english_name">английский</string>
+    <string name="russian_name_multiple">русские</string>
+    <string name="english_name_multiple">английские</string>
+    <string name="wrong_letters_language_text">"Пожалуйста используйте только %s буквы"</string>
+    <string name="edit_word_text">Редактировать слово</string>
+    <string name="enter_word_text">Введите слово</string>
+    <string name="save_text">Сохранить</string>
+    <string name="add_text">Добавить</string>
+    <string name="processing_translate_text">Обработка…</string>
+    <string name="cancel_text">Отменить</string>
+    <string name="reset">Сбросить</string>
+    <string name="search_hint">Искать слово</string>
+    <string name="words_add">Добавить слово</string>
+    <string name="speak">Говорите</string>
+    <string name="image_content_description">Поиск</string>
+    <string name="sound_content_description">Звук</string>
+    <string name="dict_tab_text">Словать</string>
+    <string name="training_tab_text">Тренировка</string>
+    <string name="choice_variant">Выберите вариант</string>
+</resources>

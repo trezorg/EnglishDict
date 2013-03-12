@@ -49,10 +49,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // Create a new CursorLoader with the following query parameters.
-        return getLoaderCursor(id, args);
+        return getLoaderCursor(args);
     }
 
-    private Loader<Cursor> getLoaderCursor(int id, Bundle args) {
+    private Loader<Cursor> getLoaderCursor(Bundle args) {
         String query = args == null ? null : args.getString("query");
         Uri uri = getContentUri(query);
         return new CursorLoader(this, uri, getProjection(), null, null, null) {
@@ -151,7 +151,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                 if (resultCode == RESULT_OK && data != null) {
                     ArrayList<String> text =
                             data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    createSpeachChoiceDialog(text);
+                    createSpeechChoiceDialog(text);
                 }
                 break;
             }
@@ -176,10 +176,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         startActivity(intent);
     }
 
-    void createSpeachChoiceDialog(final ArrayList<String> text) {
+    void createSpeechChoiceDialog(final ArrayList<String> text) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         CharSequence[] choice = text.toArray(new CharSequence[text.size()]);
-        builder.setTitle("Choice variant").
+        builder.setTitle(R.string.choice_variant).
                 setSingleChoiceItems(choice, 0, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -218,8 +218,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         }
     }
 
-    String getCurrentLangName() {
-        return getCurrentLangType() == RUSSIAN_WORDS ? "russian": "english";
+    String getCurrentLangNames() {
+        return getCurrentLangType() == RUSSIAN_WORDS ?
+                getString(R.string.russian_name_multiple):
+                getString(R.string.english_name_multiple);
     }
 
     String getIETFLocale() {
@@ -239,7 +241,8 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         source.subSequence(start, end) +
                         dest.subSequence(dend, dest.length()).toString();
                 if (!pattern.matcher(checkedText).matches()) {
-                    showToast("Please use only " + getCurrentLangName() + " letters");
+                    showToast(String.format(getString(
+                            R.string.wrong_letters_language_text), getCurrentLangNames()));
                     return "";
                 }
                 return null;
@@ -251,7 +254,8 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         final Pattern pattern = getCurrentLangType() == RUSSIAN_WORDS ?
                 RUSSIAN_LETTERS_PATTERN : ENGLISH_LETTERS_PATTERN;
         if (!pattern.matcher(text).matches()) {
-            showToast("Please use only " + getCurrentLangName() + " letters");
+            showToast(String.format(getString(
+                    R.string.wrong_letters_language_text), getCurrentLangNames()));
             return replaceNotExpectedPattern(text, pattern);
         }
         return text;
@@ -266,8 +270,8 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         editText.setText(word);
         editText.setFilters(new InputFilter[]{getInputFilter()});
         builder.setView(dialogLayout)
-                .setTitle("Edit a word")
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                .setTitle(R.string.edit_word_text)
+                .setPositiveButton(R.string.save_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         final String text = editText.getText().toString();
@@ -287,7 +291,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                             }.execute();
                         }
                     }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.cancel_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int whichButton) {}
                 });
@@ -322,8 +326,8 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             }
         });
         builder.setView(dialogLayout)
-                .setTitle("Enter a word")
-                .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                .setTitle(R.string.enter_word_text)
+                .setPositiveButton(R.string.add_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         String text = editText.getText().toString();
@@ -335,7 +339,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         }
                         mAddAlertDialog = null;
                     }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.cancel_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         mAddAlertDialog = null;
@@ -533,7 +537,7 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             dismissProgressBar();
             progressDialog = new ProgressDialog(context);
             progressDialog.setTitle(word);
-            progressDialog.setMessage("Processing...");
+            progressDialog.setMessage(getString(R.string.processing_translate_text));
             progressDialog.show();
         }
 

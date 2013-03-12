@@ -2,12 +2,24 @@
 <resources>
     <string name="app_name">EnglishDict</string>
     <string name="menu_quit">Exit</string>
+    <string name="menu_settings">Settings</string>
     <string name="menu_add">Add</string>
     <string name="menu_edit">Edit</string>
     <string name="menu_delete">Delete</string>
     <string name="default_rating">0</string>
     <string name="en_text">En</string>
     <string name="ru_text">Ru</string>
+    <string name="russian_name">russian</string>
+    <string name="english_name">english</string>
+    <string name="russian_name_multiple">russian</string>
+    <string name="english_name_multiple">english</string>
+    <string name="wrong_letters_language_text">Please use only %s letters</string>
+    <string name="edit_word_text">Edit a word</string>
+    <string name="enter_word_text">Enter a word</string>
+    <string name="save_text">Save</string>
+    <string name="add_text">Save</string>
+    <string name="cancel_text">Cancel</string>
+    <string name="processing_translate_text">Processing…</string>
     <string name="lang_text">En/Ru</string>
     <string name="reset">Reset</string>
     <string name="search_hint">Search word</string>
@@ -17,6 +29,7 @@
     <string name="sound_content_description">Sound</string>
     <string name="dict_tab_text">Dictionary</string>
     <string name="training_tab_text">Training</string>
+    <string name="choice_variant">Choice variant</string>
     <string name="translateClientId">polymetr</string>
     <string name="translateClientKey">RxaztEaI7bGU8rusQfgw1AC0tWwsHfCqkTytW6y/AB8=</string>
 </resources>
