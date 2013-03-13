@@ -151,9 +151,6 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_quit:
-                finish();
-                return true;
             case R.id.menu_en:
                 if (getCurrentLangType() != ENGLISH_WORDS) {
                     saveCurrentLangType(ENGLISH_WORDS);
@@ -193,13 +190,11 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     private void hideActionBarIcons(Menu menu) {
         menu.findItem(R.id.menu_reload).setVisible(false);
         menu.findItem(R.id.menu_lang).setVisible(false);
-        menu.findItem(R.id.menu_add).setVisible(false);
     }
 
     private void showActionBarIcons(Menu menu) {
         menu.findItem(R.id.menu_reload).setVisible(true);
         menu.findItem(R.id.menu_lang).setVisible(true);
-        menu.findItem(R.id.menu_add).setVisible(true);
     }
 
     private void handleIntent(Intent intent) {
@@ -220,11 +215,11 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     void setTabs() {
         getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         ActionBar.Tab dictTab = getSupportActionBar().newTab();
-        dictTab.setText(R.string.dict_tab_text);
+        dictTab.setText(R.string.dict_text);
         dictTab.setTabListener(this);
         getSupportActionBar().addTab(dictTab);
         ActionBar.Tab trainingTab = getSupportActionBar().newTab();
-        trainingTab.setText(R.string.training_tab_text);
+        trainingTab.setText(R.string.training_text);
         trainingTab.setTabListener(this);
         getSupportActionBar().addTab(trainingTab);
     }

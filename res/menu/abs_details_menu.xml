@@ -6,6 +6,18 @@
         android:id="@+id/menu_add"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/menu_add"
-        android:showAsAction="always"
+        android:showAsAction="never"
+        />
+    <item
+        android:id="@+id/menu_training"
+        android:icon="@drawable/ic_training"
+        android:title="@string/training_text"
+        android:showAsAction="never"
+        />
+    <item
+        android:id="@+id/menu_settings"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="@string/menu_settings"
+        android:showAsAction="never"
         />
 </menu>

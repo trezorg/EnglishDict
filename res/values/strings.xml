@@ -27,8 +27,8 @@
     <string name="speak">Speak</string>
     <string name="image_content_description">Search</string>
     <string name="sound_content_description">Sound</string>
-    <string name="dict_tab_text">Dictionary</string>
-    <string name="training_tab_text">Training</string>
+    <string name="dict_text">Dictionary</string>
+    <string name="training_text">Training</string>
     <string name="choice_variant">Choice variant</string>
     <string name="translateClientId">polymetr</string>
     <string name="translateClientKey">RxaztEaI7bGU8rusQfgw1AC0tWwsHfCqkTytW6y/AB8=</string>

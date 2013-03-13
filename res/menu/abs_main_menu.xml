@@ -5,13 +5,13 @@
     <item
         android:id="@+id/menu_search"
         android:actionViewClass="com.actionbarsherlock.widget.SearchView"
-        android:icon="@drawable/ic_search"
+        android:icon="@android:drawable/ic_menu_search"
         android:showAsAction="always|collapseActionView"
         android:title="@string/search_hint"
         />
     <item
         android:id="@+id/menu_reload"
-        android:icon="@drawable/ic_refresh"
+        android:icon="@android:drawable/ic_menu_revert"
         android:title="@string/reset"
         android:showAsAction="always"
         />
@@ -41,12 +41,12 @@
         android:id="@+id/menu_add"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/menu_add"
-        android:showAsAction="always"
+        android:showAsAction="never"
         />
     <item
-        android:id="@+id/menu_quit"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"
-        android:title="@string/menu_quit"
+        android:id="@+id/menu_training"
+        android:icon="@drawable/ic_training"
+        android:title="@string/training_text"
         android:showAsAction="never"
         />
     <item

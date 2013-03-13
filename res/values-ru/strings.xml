@@ -22,7 +22,7 @@
     <string name="speak">Говорите</string>
     <string name="image_content_description">Поиск</string>
     <string name="sound_content_description">Звук</string>
-    <string name="dict_tab_text">Словать</string>
-    <string name="training_tab_text">Тренировка</string>
+    <string name="dict_text">Словать</string>
+    <string name="training_text">Тренировка</string>
     <string name="choice_variant">Выберите вариант</string>
 </resources>
