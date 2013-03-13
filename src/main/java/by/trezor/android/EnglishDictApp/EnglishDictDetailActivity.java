@@ -7,9 +7,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 
@@ -47,6 +51,7 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
     public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu) {
         com.actionbarsherlock.view.MenuInflater inflate = getSupportMenuInflater();
         inflate.inflate(getAbsMenuLayout(), menu);
+        simulatePlaySound(menu);
         return true;
     }
 
@@ -61,6 +66,14 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void simulatePlaySound(Menu menu) {
+        MenuItem menuItem = menu.findItem(R.id.menu_detail_sound);
+        if (menuItem != null) {
+            View view = menuItem.getActionView().findViewById(R.id.english_dict_sound);
+            playSound(view);
         }
     }
 

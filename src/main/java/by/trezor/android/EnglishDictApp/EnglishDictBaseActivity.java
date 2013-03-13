@@ -468,12 +468,19 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         return ((Cursor)(getListAdapter().getItem(pos))).getString(0);
     }
 
+    private int getViewPosition(View view) {
+        try {
+            return getListView().getPositionForView((LinearLayout)view.getParent());
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
     public void playSound(final View view) {
         final LinearLayout parent = (LinearLayout)view.getParent();
         final ProgressBar progressBar =
                 (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
-        final int position =
-                getListView().getPositionForView((LinearLayout)view.getParent());
+        final int position = getViewPosition(view);
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected void onPreExecute() {
