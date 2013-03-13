@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import android.view.WindowManager;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import com.actionbarsherlock.app.ActionBar;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
@@ -45,7 +46,7 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
     @Override
     public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu) {
         com.actionbarsherlock.view.MenuInflater inflate = getSupportMenuInflater();
-        inflate.inflate(R.menu.abs_details_menu, menu);
+        inflate.inflate(getAbsMenuLayout(), menu);
         return true;
     }
 
@@ -63,12 +64,20 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
         }
     }
 
+    private int getAbsMenuLayout() {
+        return getCurrentLangType() == RUSSIAN_WORDS ?
+                R.menu.abs_details_menu_en:
+                R.menu.abs_details_menu_ru;
+    }
+
     private void prepareActionBar(String word, int lang) {
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setTitle(word);
-        actionBar.setIcon(lang == RUSSIAN_WORDS ? R.drawable.ic_usa: R.drawable.ic_russian);
+        actionBar.setIcon(
+                lang == RUSSIAN_WORDS ? R.drawable.ic_usa: R.drawable.ic_russian);
+
     }
 
     AddWordResult<String, Long> performAddAsync(String text) {
@@ -101,6 +110,22 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
                 return null;
             }
         }).execute();
+    }
+
+    @Override
+    String getSoundWord(int pos) {
+        if (getCurrentLangType() == ENGLISH_WORDS) {
+            return super.getSoundWord(pos);
+        }
+        Uri uri = getEnglishContentUri();
+        Cursor cursor = getContentResolver().query(
+                uri, getProjection(),
+                EnglishDictDescriptor.EnglishDictBaseColumns._ID + "=" + getCurrentWordId(),
+                null, null);
+        if (!cursor.moveToFirst()) {
+            return null;
+        }
+        return cursor.getString(0);
     }
 
     private void setCurrentLangType(int type) {

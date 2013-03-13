@@ -390,6 +390,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         return Uri.parse(uri + "?" + queryString);
     }
 
+    Uri getEnglishContentUri() {
+        return EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+    }
+
     private Bundle getSearchBundle(String query) {
         if (query == null || query.isEmpty()) {
             return null;
@@ -460,6 +464,10 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
     }
 
+    String getSoundWord(int pos) {
+        return ((Cursor)(getListAdapter().getItem(pos))).getString(0);
+    }
+
     public void playSound(final View view) {
         final LinearLayout parent = (LinearLayout)view.getParent();
         final ProgressBar progressBar =
@@ -475,9 +483,6 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
             }
             @Override
             protected Void doInBackground(Void... args) {
-                String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
-                if (word ==  null || word.isEmpty()) { return  null; }
-                String [] words = word.split("\\s+");
                 EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
                 final Activity activity = getActivity();
                 voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
@@ -503,6 +508,12 @@ public abstract class EnglishDictBaseActivity extends FragmentListActivity imple
                         }
                     });
                 }
+                String word = getSoundWord(position);
+                if (word ==  null || word.isEmpty()) {
+                    voice.onFinish();
+                    return  null;
+                }
+                String [] words = word.split("\\s+");
                 voice.play(words);
                 return null;
             }

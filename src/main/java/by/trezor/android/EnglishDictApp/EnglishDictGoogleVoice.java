@@ -125,7 +125,7 @@ public class EnglishDictGoogleVoice {
         onExecute();
     }
 
-    private void onFinish() {
+    void onFinish() {
         onFinish(mediaPlayer);
         mediaPlayer = null;
     }
