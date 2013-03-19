@@ -31,6 +31,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     private int mLangType = ENGLISH_WORDS;
     private SORT_ORDER mOrder = SORT_ORDER.WORD;
     private MenuItem mSearchMenuItem;
+    private boolean isSearch;
     private static final int LOADER_ID = 0;
     private Parcelable mListState = null;
 
@@ -179,6 +180,8 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
             case R.id.menu_reload:
                 setAdapterCursor();
                 collapseSearchView();
+                isSearch = false;
+                invalidateOptionsMenu();
                 return true;
             case R.id.menu_add:
                 getAddAlertDialog();
@@ -217,7 +220,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     }
 
     private void showActionBarIcons(Menu menu) {
-        menu.findItem(R.id.menu_reload).setVisible(true);
+        menu.findItem(R.id.menu_reload).setVisible(isSearch);
         menu.findItem(R.id.menu_lang).setVisible(true);
         menu.findItem(R.id.menu_sort).setVisible(true);
     }
@@ -226,6 +229,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         String query = null;
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             query = intent.getStringExtra(SearchManager.QUERY);
+            isSearch = true;
             collapseSearchView();
         }
         restartLoader(query);
