@@ -22,6 +22,7 @@
     <string name="processing_translate_text">Processing…</string>
     <string name="lang_text">En/Ru</string>
     <string name="reset">Reset</string>
+    <string name="sort">Sort</string>
     <string name="search_hint">Search word</string>
     <string name="words_add">Add word</string>
     <string name="speak">Speak</string>
@@ -33,4 +34,6 @@
     <string name="speech_support">Your device doesn\'t support Speech to Text</string>
     <string name="translateClientId">polymetr</string>
     <string name="translateClientKey">RxaztEaI7bGU8rusQfgw1AC0tWwsHfCqkTytW6y/AB8=</string>
+    <string name="order_name">Name</string>
+    <string name="order_rating">Rating</string>
 </resources>

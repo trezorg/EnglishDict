@@ -16,8 +16,8 @@ public class EnglishDictDescriptor {
 
             RATING("rating", false),
             RATING_REVERSE("rating", true),
-            NAME("word", false),
-            NAME_REVERSE("word", true);
+            WORD("word", false),
+            WORD_REVERSE("word", true);
 
             private String sortName;
             private Boolean sortReverse;
@@ -35,14 +35,20 @@ public class EnglishDictDescriptor {
                 return sortReverse;
             }
 
+            public String getSortId() {
+                return String.format("order%s_%s", (getReverse() ? "_reverse" : ""), getValue());
+            }
+
             @Override
             public String toString() {
-                return (getReverse() ? "-" : "") + getValue();
+                return String.format("%s%s", getValue(), getReverse() ? " DESC" : "");
             }
         }
 
         public static final String WORD = "word";
+        public static final String ORDER_BY = "order_by";
         public static final String QUERY_PARAM_NAME = WORD;
+        public static final String QUERY_PARAM_ORDER_BY = ORDER_BY;
         public static final String QUERY_RELATION_NAME = "relationId";
         public static final String RATING = "rating";
         public static final String CONTENT_TYPE =

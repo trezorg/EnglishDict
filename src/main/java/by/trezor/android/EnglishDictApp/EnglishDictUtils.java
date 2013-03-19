@@ -40,10 +40,11 @@ public class EnglishDictUtils {
     };
 
     static private Toast mToast;
-    public  static  final String WORD = "word";
-    public  static  final String WORD_ID = "word_id";
-    public  static  final String WORD_POSITION = "word_position";
-    public  static  final String LANG_TYPE = "lang_type";
+    public  static final String WORD = "word";
+    public  static final String WORD_ID = "word_id";
+    public  static final String WORD_POSITION = "word_position";
+    public  static final String ORDERING = "ordering";
+    public  static final String LANG_TYPE = "lang_type";
     static final private String RUSSIAN_LETTERS =
             "[-,абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]";
     static final private String ENGLISH_LETTERS =

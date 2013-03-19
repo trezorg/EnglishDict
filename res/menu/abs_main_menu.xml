@@ -11,17 +11,51 @@
         />
     <item
         android:id="@+id/menu_reload"
-        android:icon="@android:drawable/ic_menu_revert"
+        android:icon="@android:drawable/ic_menu_rotate"
         android:title="@string/reset"
         android:showAsAction="always"
         />
+    <item
+        android:id="@+id/menu_sort"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="@string/sort"
+        android:showAsAction="always">
+        <menu>
+            <group android:id="@+id/group_rating" android:checkableBehavior="single">
+                <item
+                    android:id="@+id/order_word"
+                    android:icon="@android:drawable/arrow_down_float"
+                    android:title="@string/order_name"
+                    android:showAsAction="never"
+                    />
+                <item
+                    android:id="@+id/order_reverse_word"
+                    android:icon="@android:drawable/arrow_up_float"
+                    android:title="@string/order_name"
+                    android:showAsAction="never"
+                    />
+                <item
+                    android:id="@+id/order_rating"
+                    android:icon="@android:drawable/arrow_down_float"
+                    android:title="@string/order_rating"
+                    android:showAsAction="never"
+                    />
+                <item
+                    android:id="@+id/order_reverse_rating"
+                    android:icon="@android:drawable/arrow_up_float"
+                    android:title="@string/order_rating"
+                    android:showAsAction="never"
+                    />
+            </group>
+        </menu>
+    </item>
     <item
         android:id="@+id/menu_lang"
         android:icon="@drawable/abs__ic_menu_moreoverflow_normal_holo_dark"
         android:title="@string/lang_text"
         android:showAsAction="always">
         <menu>
-            <group android:checkableBehavior="single">
+            <group android:id="@+id/group_lang" android:checkableBehavior="single">
                 <item
                     android:id="@+id/menu_en"
                     android:icon="@drawable/ic_usa"

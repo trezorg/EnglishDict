@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.*;
 import android.widget.ListView;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -20,6 +21,7 @@ import com.actionbarsherlock.widget.SearchView;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
 public class EnglishDictActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {
 
@@ -27,6 +29,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     private static final String LIST_STATE = "listState";
     private static final String LIST_LANG = "listLang";
     private int mLangType = ENGLISH_WORDS;
+    private SORT_ORDER mOrder = SORT_ORDER.WORD;
     private MenuItem mSearchMenuItem;
     private static final int LOADER_ID = 0;
     private Parcelable mListState = null;
@@ -143,6 +146,9 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         int langType = getCurrentLangType();
         MenuItem enMenuItem = menu.findItem(R.id.menu_en);
         MenuItem ruMenuItem = menu.findItem(R.id.menu_ru);
+        int orderId = getResources().getIdentifier(mOrder.getSortId(), "id", getPackageName());
+        menu.findItem(orderId).setChecked(true);
+        menu.findItem(orderId).setEnabled(false);
         enMenuItem.setEnabled(langType != ENGLISH_WORDS);
         ruMenuItem.setEnabled(langType != RUSSIAN_WORDS);
         (langType == RUSSIAN_WORDS ? ruMenuItem : enMenuItem).setChecked(true);
@@ -172,6 +178,18 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
             case R.id.menu_add:
                 getAddAlertDialog();
                 return true;
+            case R.id.order_word:
+                saveCurrentOrdering(SORT_ORDER.WORD);
+                return true;
+            case R.id.order_reverse_word:
+                saveCurrentOrdering(SORT_ORDER.WORD_REVERSE);
+                return true;
+            case R.id.order_rating:
+                saveCurrentOrdering(SORT_ORDER.RATING);
+                return true;
+            case R.id.order_reverse_rating:
+                saveCurrentOrdering(SORT_ORDER.RATING_REVERSE);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -192,11 +210,13 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     private void hideActionBarIcons(Menu menu) {
         menu.findItem(R.id.menu_reload).setVisible(false);
         menu.findItem(R.id.menu_lang).setVisible(false);
+        menu.findItem(R.id.menu_sort).setVisible(false);
     }
 
     private void showActionBarIcons(Menu menu) {
         menu.findItem(R.id.menu_reload).setVisible(true);
         menu.findItem(R.id.menu_lang).setVisible(true);
+        menu.findItem(R.id.menu_sort).setVisible(true);
     }
 
     private void handleIntent(Intent intent) {
@@ -240,6 +260,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
                 }
                 showSecondaryActivity(result.getWord(), result.getId(), result.getPosition());
             }
+
             @Override
             public AddWordResult<String, Long, Integer> onBackground(String word) {
                 if (word == null || word.isEmpty()) {
@@ -247,6 +268,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
                 }
                 return performAddAsync(word);
             }
+
             @Override
             public void onPreExecute() {
                 dismissProgressBar();
@@ -282,6 +304,47 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         getContentResolver().insert(secondaryUri, values);
         Log.i(TAG, String.format("Added word " + trans));
         return new AddWordResult<String, Long, Integer>(word, wordId, position);
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
+        Cursor cursor = getContentResolver().query(getContentUri(), null, null, null, null);
+        int pos = getCursorPositionForId(cursor, id);
+        showSecondaryActivity(word, id, pos);
+    }
+
+    void showSecondaryActivity(String word, long  id, int position) {
+        Bundle bundle = new Bundle();
+        bundle.putLong(WORD_ID, id);
+        bundle.putInt(LANG_TYPE, getCurrentLangType() == ENGLISH_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS);
+        bundle.putString(WORD, word);
+        bundle.putInt(WORD_POSITION, position);
+        bundle.putString(ORDERING, mOrder.name());
+        Intent intent = new Intent(this, EnglishDictDetailActivity.class);
+        intent.putExtras(bundle);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
+
+    Uri getMainContentUri(int type, String search) {
+        Uri uri;
+        switch (type) {
+            case ENGLISH_WORDS:
+                uri = EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+                break;
+            case RUSSIAN_WORDS:
+                uri = EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
+        uri = Uri.parse(uri + "?" + EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_PARAM_ORDER_BY
+                + "=" + Uri.encode(mOrder.toString()));
+        if (search == null || search.isEmpty()) { return uri; }
+        String queryString = EnglishDictDescriptor.
+                EnglishDictBaseColumns.QUERY_PARAM_NAME + "=" + Uri.encode(search);
+        return Uri.parse(uri + "&" + queryString);
     }
 
     private Uri getContentUri(int type, String search) {
@@ -322,6 +385,11 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         type = type == RUSSIAN_WORDS ? RUSSIAN_WORDS: ENGLISH_WORDS;
         setCurrentLangType(type);
         setViewAdapter();
+        setAdapterCursor();
+    }
+
+    private void saveCurrentOrdering(SORT_ORDER order) {
+        mOrder = order;
         setAdapterCursor();
     }
 

@@ -13,6 +13,7 @@
     <string name="edit_word_text">Редактировать слово</string>
     <string name="enter_word_text">Введите слово</string>
     <string name="save_text">Сохранить</string>
+    <string name="sort">Сортировка</string>
     <string name="add_text">Добавить</string>
     <string name="processing_translate_text">Обработка…</string>
     <string name="cancel_text">Отменить</string>
@@ -26,4 +27,6 @@
     <string name="training_text">Тренировка</string>
     <string name="choice_variant">Выберите вариант</string>
     <string name="speech_support">Ваше устройство не поддерживает технологию Speech To Text</string>
+    <string name="order_name">Имя</string>
+    <string name="order_rating">Рейтинг</string>
 </resources>

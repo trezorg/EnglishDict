@@ -10,7 +10,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.util.*;
 
@@ -96,8 +95,14 @@ public class EnglishDictContentProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String where, String[] whereArgs, String sortOrder) {
         // If no sort order is specified use the default
         String orderBy;
+        String queryOrderBy = uri.getQueryParameter(
+                EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_PARAM_ORDER_BY);
         if (TextUtils.isEmpty(sortOrder)) {
-            orderBy = EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER.NAME.toString();
+            if (queryOrderBy == null || queryOrderBy.isEmpty()) {
+                orderBy = EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER.WORD.toString();
+            } else {
+                orderBy = queryOrderBy;
+            }
         } else {
             orderBy = sortOrder;
         }

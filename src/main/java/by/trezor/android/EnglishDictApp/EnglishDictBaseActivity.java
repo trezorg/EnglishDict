@@ -153,26 +153,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         }
     }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
-        Cursor cursor = getContentResolver().query(getContentUri(), null, null, null, null);
-        int pos = getCursorPositionForId(cursor, id);
-        showSecondaryActivity(word, id, pos);
-    }
-
-    void showSecondaryActivity(String word, long  id, int position) {
-        Bundle bundle = new Bundle();
-        bundle.putLong(WORD_ID, id);
-        bundle.putInt(LANG_TYPE, getCurrentLangType() == ENGLISH_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS);
-        bundle.putString(WORD, word);
-        bundle.putInt(WORD_POSITION, position);
-        Intent intent = new Intent(this, EnglishDictDetailActivity.class);
-        intent.putExtras(bundle);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-    }
-
     void createSpeechChoiceDialog(final ArrayList<String> text) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         CharSequence[] choice = text.toArray(new CharSequence[text.size()]);
@@ -367,24 +347,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         return Uri.parse(uri + "?" +
                 EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_RELATION_NAME +
                 "=" + id);
-    }
-
-    Uri getMainContentUri(int type, String search) {
-        Uri uri;
-        switch (type) {
-            case ENGLISH_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
-                break;
-            case RUSSIAN_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown type: " + type);
-        }
-        if (search == null || search.isEmpty()) { return uri; }
-        String queryString = EnglishDictDescriptor.
-                EnglishDictBaseColumns.QUERY_PARAM_NAME + "=" + Uri.encode(search);
-        return Uri.parse(uri + "?" + queryString);
     }
 
     private Bundle getSearchBundle(String query) {

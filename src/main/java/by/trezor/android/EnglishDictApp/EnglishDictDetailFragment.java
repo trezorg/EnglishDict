@@ -46,7 +46,6 @@ class EnglishDictDetailFragment extends SherlockListFragment implements
     private long mId;
     private ProgressBar mProgressBar;
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -64,9 +63,10 @@ class EnglishDictDetailFragment extends SherlockListFragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mId = getArguments().getLong(WORD_ID);
-        mLangType = getArguments().getInt(LANG_TYPE, ENGLISH_WORDS);
-        loaderId = getArguments().getInt(WORD_POSITION);
+        Bundle bundle = getArguments();
+        mId = bundle.getLong(WORD_ID);
+        mLangType = bundle.getInt(LANG_TYPE, ENGLISH_WORDS);
+        loaderId = bundle.getInt(WORD_POSITION);
     }
 
     public void setLoaderAdapter() {

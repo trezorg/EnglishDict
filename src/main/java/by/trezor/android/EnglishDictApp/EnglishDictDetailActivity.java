@@ -27,12 +27,14 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
 
 public class EnglishDictDetailActivity extends SherlockFragmentActivity {
 
     private static final String TAG = EnglishDictDetailActivity.class.getSimpleName();
     private int mLangType = ENGLISH_WORDS;
+    private SORT_ORDER mOrder = SORT_ORDER.WORD;
     private String mWord;
     private ViewPager mPager;
     private EnglishDictStatePagerAdapter mPagerAdapter;
@@ -48,6 +50,12 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
         }
         int langType = intent.getIntExtra(LANG_TYPE, ENGLISH_WORDS);
         int position = intent.getIntExtra(WORD_POSITION, 0);
+        String orderName = intent.getStringExtra(ORDERING);
+        if (orderName == null) {
+            mOrder = SORT_ORDER.WORD;
+        } else {
+            mOrder = SORT_ORDER.valueOf(orderName);
+        }
         mWord = intent.getStringExtra(WORD);
         setCurrentLangType(langType);
         setContentView(R.layout.english_dict_pager);
@@ -194,15 +202,21 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
     }
 
     Uri getContentUri() {
+        Uri uri;
         int type = getCurrentLangType();
         switch (getCurrentLangType()) {
             case ENGLISH_WORDS:
-                return EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
+                uri = EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
+                break;
             case RUSSIAN_WORDS:
-                return EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+                uri = EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+                break;
             default:
                 throw new IllegalArgumentException("Unknown type: " + type);
         }
+        uri = Uri.parse(uri + "?" + EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_PARAM_ORDER_BY
+                + "=" + Uri.encode(mOrder.toString()));
+        return uri;
     }
 
     int getCurrentLangType() {
