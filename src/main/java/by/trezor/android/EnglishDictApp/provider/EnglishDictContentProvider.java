@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.*;
 
@@ -96,7 +97,7 @@ public class EnglishDictContentProvider extends ContentProvider {
         // If no sort order is specified use the default
         String orderBy;
         if (TextUtils.isEmpty(sortOrder)) {
-            orderBy = EnglishDictDescriptor.EnglishDictBaseColumns.DEFAULT_SORT_ORDER;
+            orderBy = EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER.NAME.toString();
         } else {
             orderBy = sortOrder;
         }

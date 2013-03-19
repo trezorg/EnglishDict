@@ -11,7 +11,36 @@ public class EnglishDictDescriptor {
     public static class EnglishDictBaseColumns implements BaseColumns {
 
         private EnglishDictBaseColumns () {}
-        public static final String DEFAULT_SORT_ORDER = "rating";
+
+        public static enum SORT_ORDER {
+
+            RATING("rating", false),
+            RATING_REVERSE("rating", true),
+            NAME("word", false),
+            NAME_REVERSE("word", true);
+
+            private String sortName;
+            private Boolean sortReverse;
+
+            SORT_ORDER(String sortString, boolean sortReverse) {
+                this.sortName = sortString;
+                this.sortReverse = sortReverse;
+            }
+
+            public String getValue() {
+                return sortName;
+            }
+
+            public Boolean getReverse() {
+                return sortReverse;
+            }
+
+            @Override
+            public String toString() {
+                return (getReverse() ? "-" : "") + getValue();
+            }
+        }
+
         public static final String WORD = "word";
         public static final String QUERY_PARAM_NAME = WORD;
         public static final String QUERY_RELATION_NAME = "relationId";
