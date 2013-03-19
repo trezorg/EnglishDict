@@ -21,7 +21,7 @@
         android:title="@string/sort"
         android:showAsAction="always">
         <menu>
-            <group android:id="@+id/group_rating" android:checkableBehavior="single">
+            <group android:id="@+id/group_rating" android:checkableBehavior="none">
                 <item
                     android:id="@+id/order_word"
                     android:icon="@android:drawable/arrow_down_float"
@@ -29,20 +29,8 @@
                     android:showAsAction="never"
                     />
                 <item
-                    android:id="@+id/order_reverse_word"
-                    android:icon="@android:drawable/arrow_up_float"
-                    android:title="@string/order_name"
-                    android:showAsAction="never"
-                    />
-                <item
                     android:id="@+id/order_rating"
                     android:icon="@android:drawable/arrow_down_float"
-                    android:title="@string/order_rating"
-                    android:showAsAction="never"
-                    />
-                <item
-                    android:id="@+id/order_reverse_rating"
-                    android:icon="@android:drawable/arrow_up_float"
                     android:title="@string/order_rating"
                     android:showAsAction="never"
                     />

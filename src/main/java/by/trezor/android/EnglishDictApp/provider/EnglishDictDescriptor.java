@@ -31,17 +31,21 @@ public class EnglishDictDescriptor {
                 return sortName;
             }
 
-            public Boolean getReverse() {
+            public boolean isReverse() {
                 return sortReverse;
             }
 
-            public String getSortId() {
-                return String.format("order%s_%s", (getReverse() ? "_reverse" : ""), getValue());
+            public boolean isWordOrdering() {
+                return this.getValue().equals("word");
+            }
+
+            public boolean isRatingOrdering() {
+                return this.getValue().equals("rating");
             }
 
             @Override
             public String toString() {
-                return String.format("%s%s", getValue(), getReverse() ? " DESC" : "");
+                return String.format("%s%s", getValue(), isReverse() ? " DESC" : "");
             }
         }
 

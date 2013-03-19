@@ -144,14 +144,19 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         int langType = getCurrentLangType();
-        MenuItem enMenuItem = menu.findItem(R.id.menu_en);
-        MenuItem ruMenuItem = menu.findItem(R.id.menu_ru);
-        int orderId = getResources().getIdentifier(mOrder.getSortId(), "id", getPackageName());
-        menu.findItem(orderId).setChecked(true);
-        menu.findItem(orderId).setEnabled(false);
-        enMenuItem.setEnabled(langType != ENGLISH_WORDS);
-        ruMenuItem.setEnabled(langType != RUSSIAN_WORDS);
-        (langType == RUSSIAN_WORDS ? ruMenuItem : enMenuItem).setChecked(true);
+        int menuId = langType == ENGLISH_WORDS ? R.id.menu_en: R.id.menu_ru;
+        int orderIcon = mOrder.isReverse() ?
+                android.R.drawable.arrow_up_float :
+                android.R.drawable.arrow_down_float;
+        if (mOrder.isWordOrdering()) {
+            menu.findItem(R.id.order_word).setIcon(orderIcon);
+            menu.findItem(R.id.order_rating).setIcon(null);
+        } else {
+            menu.findItem(R.id.order_word).setIcon(null);
+            menu.findItem(R.id.order_rating).setIcon(orderIcon);
+        }
+        menu.findItem(menuId).setChecked(true);
+        menu.findItem(menuId).setEnabled(false);
         prepareActionBar();
         return super.onPrepareOptionsMenu(menu);
     }
@@ -179,16 +184,14 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
                 getAddAlertDialog();
                 return true;
             case R.id.order_word:
-                saveCurrentOrdering(SORT_ORDER.WORD);
-                return true;
-            case R.id.order_reverse_word:
-                saveCurrentOrdering(SORT_ORDER.WORD_REVERSE);
+                saveCurrentOrdering(mOrder.isWordOrdering() ?
+                        (mOrder.isReverse() ? SORT_ORDER.WORD : SORT_ORDER.WORD_REVERSE) :
+                        SORT_ORDER.WORD);
                 return true;
             case R.id.order_rating:
-                saveCurrentOrdering(SORT_ORDER.RATING);
-                return true;
-            case R.id.order_reverse_rating:
-                saveCurrentOrdering(SORT_ORDER.RATING_REVERSE);
+                saveCurrentOrdering(mOrder.isRatingOrdering() ?
+                        (mOrder.isReverse() ? SORT_ORDER.RATING : SORT_ORDER.RATING_REVERSE) :
+                        SORT_ORDER.RATING);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
