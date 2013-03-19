@@ -25,4 +25,5 @@
     <string name="dict_text">Словать</string>
     <string name="training_text">Тренировка</string>
     <string name="choice_variant">Выберите вариант</string>
+    <string name="speech_support">Ваше устройство не поддерживает технологию Speech To Text</string>
 </resources>

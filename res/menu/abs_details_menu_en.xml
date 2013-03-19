@@ -8,6 +8,16 @@
         android:showAsAction="always"
         />
     <item
+        android:id="@+id/menu_detail_previous"
+        android:icon="@drawable/ic_previous"
+        android:showAsAction="always"
+        />
+    <item
+        android:id="@+id/menu_detail_next"
+        android:icon="@drawable/ic_next"
+        android:showAsAction="always"
+        />
+    <item
         android:id="@+id/menu_add"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/menu_add"

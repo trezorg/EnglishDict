@@ -30,6 +30,7 @@
     <string name="dict_text">Dictionary</string>
     <string name="training_text">Training</string>
     <string name="choice_variant">Choice variant</string>
+    <string name="speech_support">Your device doesn\'t support Speech to Text</string>
     <string name="translateClientId">polymetr</string>
     <string name="translateClientKey">RxaztEaI7bGU8rusQfgw1AC0tWwsHfCqkTytW6y/AB8=</string>
 </resources>

@@ -2,26 +2,27 @@ package by.trezor.android.EnglishDictApp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.*;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.*;
-import android.widget.*;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.InputFilter;
 import android.text.Spanned;
+import android.util.Log;
+import android.view.*;
+import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.*;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.app.SherlockListFragment;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -31,25 +32,56 @@ import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 
 
-public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListActivity implements
+class EnglishDictDetailFragment extends SherlockListFragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final String TAG = EnglishDictBaseActivity.class.getSimpleName();
+    private static final String TAG = EnglishDictDetailFragment.class.getSimpleName();
     protected static final int RESULT_SPEECH = 1013;
+    static final int RESULT_OK = -1;
     private AlertDialog mAddAlertDialog;
+    private Toast mToast;
     private SimpleCursorAdapter mAdapter;
+    private int mLangType = ENGLISH_WORDS;
+    private int loaderId;
+    private long mId;
     private ProgressBar mProgressBar;
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.english_dict_list, container, false);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setLoaderAdapter();
+        registerForContextMenu(getListView());
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mId = getArguments().getLong(WORD_ID);
+        mLangType = getArguments().getInt(LANG_TYPE, ENGLISH_WORDS);
+        loaderId = getArguments().getInt(WORD_POSITION);
+    }
+
+    public void setLoaderAdapter() {
+        setViewAdapter();
+        initLoader();
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // Create a new CursorLoader with the following query parameters.
-        return getLoaderCursor(args);
+        return getLoaderCursor();
     }
 
-    private Loader<Cursor> getLoaderCursor(Bundle args) {
-        String query = args == null ? null : args.getString("query");
-        Uri uri = getContentUri(query);
-        return new CursorLoader(this, uri, getProjection(), null, null, null) {
+    private Loader<Cursor> getLoaderCursor() {
+        return new CursorLoader(getSherlockActivity(), getContentUri(), getProjection(), null, null, null) {
             @Override
             protected void onStartLoading() {
                 super.onStartLoading();
@@ -65,9 +97,9 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
             // The asynchronous load is complete and the data
             // is now available for use. Only now can we associate
             // the queried Cursor with the SimpleCursorAdapter.
-            mAdapter.swapCursor(cursor);
+            mAdapter.changeCursor(cursor);
+            dismissProgressBar();
         }
-        dismissProgressBar();
     }
 
     @Override
@@ -90,16 +122,19 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
             Log.e(TAG, "bad menuInfo", e);
             return;
         }
-        Cursor c = ((Cursor)(getListAdapter().getItem(info.position)));
-        String word = c.getString(0);
-        MenuInflater inflate = getMenuInflater();
-        inflate.inflate(R.menu.popup_menu, menu);
+        Cursor cursor = ((Cursor)mAdapter.getItem(info.position));
+        String word = cursor.getString(0);
+        menu.add(loaderId, R.id.popup_menu_edit, 0, R.string.menu_edit);
+        menu.add(loaderId, R.id.popup_menu_delete, 0, R.string.menu_delete);
         menu.setHeaderTitle(word);
         menu.setHeaderIcon(android.R.drawable.ic_menu_edit);
     }
 
     @Override
-    public boolean onContextItemSelected(android.view.MenuItem item) {
+    public boolean onContextItemSelected(MenuItem item) {
+        if (item.getGroupId() != loaderId) {
+            return super.onContextItemSelected(item);
+        }
         final AdapterView.AdapterContextMenuInfo info;
         try {
             info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
@@ -110,15 +145,16 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         Cursor cursor;
         int wordID;
         final Uri uri = getContentUri();
+        final Activity mActivity = getSherlockActivity();
         switch (item.getItemId()) {
             case R.id.popup_menu_delete:
                 showProgressBar();
                 new AsyncTask<Void, Void, Void>() {
                     @Override
                     protected Void doInBackground(Void... args) {
-                        Cursor cursor = ((Cursor)(getListAdapter().getItem(info.position)));
+                        Cursor cursor = (Cursor)mAdapter.getItem(info.position);
                         int wordID = cursor.getInt(1);
-                        getContentResolver().delete(
+                        mActivity.getContentResolver().delete(
                                 ContentUris.withAppendedId(uri, wordID), null, null);
                         return null;
                     }
@@ -126,7 +162,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                 return true;
             case R.id.popup_menu_edit:
                 showProgressBar();
-                cursor = ((Cursor)(getListAdapter().getItem(info.position)));
+                cursor = (Cursor)getListAdapter().getItem(info.position);
                 wordID = cursor.getInt(1);
                 String word = cursor.getString(0);
                 showEditWordActivity(wordID, word);
@@ -138,7 +174,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case RESULT_SPEECH: {
@@ -149,14 +185,14 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                 }
                 break;
             }
-
         }
     }
 
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        String word = ((Cursor)(getListAdapter().getItem(position))).getString(0);
-        Cursor cursor = getContentResolver().query(getContentUri(), null, null, null, null);
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        String word = ((Cursor)(mAdapter.getItem(position))).getString(0);
+        Cursor cursor = getSherlockActivity().getContentResolver().query(
+                getMainContentUri(getCurrentLangType(), null), null, null, null, null);
         int pos = getCursorPositionForId(cursor, id);
         showSecondaryActivity(word, id, pos);
     }
@@ -167,44 +203,33 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         bundle.putInt(LANG_TYPE, getCurrentLangType() == ENGLISH_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS);
         bundle.putString(WORD, word);
         bundle.putInt(WORD_POSITION, position);
-        Intent intent = new Intent(this, EnglishDictDetailActivity.class);
+        Intent intent = new Intent(getSherlockActivity(), EnglishDictDetailActivity.class);
         intent.putExtras(bundle);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
 
     void createSpeechChoiceDialog(final ArrayList<String> text) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getSherlockActivity());
         CharSequence[] choice = text.toArray(new CharSequence[text.size()]);
         builder.setTitle(R.string.choice_variant).
                 setSingleChoiceItems(choice, 0, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String word = text.get(which);
-                AlertDialog alertDialog = getAddAlertDialog();
-                EditText editText = (EditText)
-                        alertDialog.findViewById(R.id.add_popup_input);
-                editText.setText(word);
-                dialog.dismiss();
-            }
-        });
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String word = text.get(which);
+                        AlertDialog alertDialog = getAddAlertDialog();
+                        EditText editText = (EditText)
+                                alertDialog.findViewById(R.id.add_popup_input);
+                        editText.setText(word);
+                        dialog.dismiss();
+                    }
+                });
         builder.show();
-    }
-
-    void setInputLanguage() {
-        String langCode = getCurrentLangType() == ENGLISH_WORDS ? "EN" : "RU";
-        Resources res = getResources();
-        DisplayMetrics dm = res.getDisplayMetrics();
-        Configuration conf = res.getConfiguration();
-        Locale locale = new Locale(langCode.toLowerCase());
-        Locale.setDefault(locale);
-        conf.locale = locale;
-        res.updateConfiguration(conf, dm);
     }
 
     void showProgressBar() {
         if (mProgressBar == null) {
-            mProgressBar = (ProgressBar)findViewById(R.id.progress_bar);
+            mProgressBar = (ProgressBar)getView().findViewById(R.id.progress_bar);
         }
         mProgressBar.setVisibility(View.VISIBLE);
     }
@@ -238,7 +263,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                         source.subSequence(start, end) +
                         dest.subSequence(dend, dest.length()).toString();
                 if (!pattern.matcher(checkedText).matches()) {
-                    showToast(getActivity(), String.format(getString(
+                    showToast(String.format(getString(
                             R.string.wrong_letters_language_text), getCurrentLangNames()));
                     return "";
                 }
@@ -247,20 +272,10 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         };
     }
 
-    String checkPatternLanguageText(String text) {
-        final Pattern pattern = getCurrentLangType() == RUSSIAN_WORDS ?
-                RUSSIAN_LETTERS_PATTERN : ENGLISH_LETTERS_PATTERN;
-        if (!pattern.matcher(text).matches()) {
-            showToast(this, String.format(getString(
-                    R.string.wrong_letters_language_text), getCurrentLangNames()));
-            return replaceNotExpectedPattern(text, pattern);
-        }
-        return text;
-    }
-
     AlertDialog showEditWordActivity(final int wordId, final String word) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = getLayoutInflater();
+        final SherlockFragmentActivity activity = getSherlockActivity();
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        LayoutInflater inflater = activity.getLayoutInflater();
         View dialogLayout = inflater.inflate(
                 R.layout.english_dict_add_popup, null, false);
         final EditText editText = (EditText) dialogLayout.findViewById(R.id.add_popup_input);
@@ -282,7 +297,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                                     ContentValues values = new ContentValues();
                                     values.put("word", text);
                                     Uri uri = ContentUris.withAppendedId(getContentUri(), wordId);
-                                    getContentResolver().update(uri, values, null, null);
+                                    activity.getContentResolver().update(uri, values, null, null);
                                     return null;
                                 }
                             }.execute();
@@ -296,8 +311,9 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
     }
 
     AlertDialog showAddWordActivity() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = getLayoutInflater();
+        final SherlockFragmentActivity activity = getSherlockActivity();
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        LayoutInflater inflater = activity.getLayoutInflater();
         View dialogLayout = inflater.inflate(
                 R.layout.english_dict_add_popup, null, false);
         final ImageButton btnSpeak = (ImageButton)
@@ -318,7 +334,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                     startActivityForResult(intent, RESULT_SPEECH);
                     editText.setText("");
                 } catch (ActivityNotFoundException a) {
-                    showToast(getActivity(), getString(R.string.speech_support));
+                    showToast(getString(R.string.speech_support));
                 }
             }
         });
@@ -346,7 +362,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
     }
 
     private void hideVirtualKeyboard(EditText editText) {
-        InputMethodManager imm = (InputMethodManager)getSystemService(
+        InputMethodManager imm = (InputMethodManager)getSherlockActivity().getSystemService(
                 Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
@@ -359,7 +375,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                 break;
             case RUSSIAN_WORDS:
                 uri = EnglishDictDescriptor.EnglishDictDetailRussianWords.CONTENT_URI;
-                Log.d(TAG, uri.toString());
                 break;
             default:
                 throw new IllegalArgumentException("Unknown type: " + type);
@@ -387,18 +402,8 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         return Uri.parse(uri + "?" + queryString);
     }
 
-    private Bundle getSearchBundle(String query) {
-        if (query == null || query.isEmpty()) {
-            return null;
-        }
-        Bundle bundle = new Bundle();
-        bundle.putString("query", query);
-        return bundle;
-    }
-
-    void restartLoader(String query) {
-        getSupportLoaderManager().restartLoader(
-                getLoaderId(), getSearchBundle(query), this);
+    void initLoader() {
+        getSherlockActivity().getSupportLoaderManager().initLoader(getLoaderId(), null, this);
     }
 
     private int getListItem() {
@@ -410,7 +415,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
     void setViewAdapter() {
         int[] viewIds = new int[] { R.id.english_dict_word };
         mAdapter = new SimpleCursorAdapter(
-                this,
+                getSherlockActivity(),
                 getListItem(),
                 null,
                 getProjection(),
@@ -420,67 +425,57 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         setListAdapter(mAdapter);
     }
 
-    String getSoundWord(int pos) {
-        return ((Cursor)(getListAdapter().getItem(pos))).getString(0);
-    }
-
-    private int getViewPosition(View view) {
-        try {
-            return getListView().getPositionForView((LinearLayout)view.getParent());
-        } catch (Exception ex) {
-            return -1;
+    void showToast(String message) {
+        if (mToast == null || mToast.getView().getWindowVisibility() != View.VISIBLE) {
+            mToast = Toast.makeText(getSherlockActivity(), message , Toast.LENGTH_SHORT);
+        } else {
+            mToast.setText(message);
         }
+        mToast.show();
     }
 
-    public void playSound(final View view) {
-        final LinearLayout parent = (LinearLayout)view.getParent();
-        final ProgressBar progressBar =
-                (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
-        final int position = getViewPosition(view);
-        new AsyncTask<Void, Void, Void>() {
+    AddWordResult<String, Long, Integer> performAddAsync(String text) {
+        ContentValues values = new ContentValues();
+        SherlockFragmentActivity activity = getSherlockActivity();
+        values.put("word", text);
+        Uri uri = activity.getContentResolver().insert(getContentUri(), values);
+        Cursor cursor = activity.getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        long wordId = cursor.getInt(0);
+        String word = cursor.getString(1);
+        cursor = activity.getContentResolver().query(getContentUri(), null, null, null, null);
+        int position = getCursorPositionForId(cursor, wordId);
+        cursor.close();
+        Log.i(TAG, String.format("Added word " + word));
+        return new AddWordResult<String, Long, Integer>(word, wordId, position);
+    }
+
+
+    void performAddActions(final String text) {
+        final ProgressDialog progressDialog = new ProgressDialog(getSherlockActivity());
+        progressDialog.setTitle(text);
+        progressDialog.setMessage(getString(R.string.processing_translate_text));
+        new AddWordAsyncTask(text).setOnQueryTextListener(new AddWordAsyncTask.OnExecuteListener() {
             @Override
-            protected void onPreExecute() {
-                progressBar.setVisibility(View.VISIBLE);
-                view.setVisibility(View.GONE);
-                setVolume(getActivity(), 70);
+            public void onExecute(AddWordAsyncTask.AddWordResult<String, Long, Integer> result) {
+                progressDialog.dismiss();
+                if (result == null) {
+                    showToast(String.format("Word %s do not exist.", text));
+                }
             }
             @Override
-            protected Void doInBackground(Void... args) {
-                EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
-                final Activity activity = getActivity();
-                voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
-                    @Override
-                    public void onExecute() {
-                        activity.runOnUiThread(new Runnable() {
-                            public void run() {
-                                progressBar.setVisibility(View.GONE);
-                                view.setVisibility(View.VISIBLE);
-                            }
-                        });
-                    }
-                });
-                if (voice.getOnErrorListener() == null) {
-                    voice.setOnErrorListener(new EnglishDictGoogleVoice.OnErrorListener() {
-                        @Override
-                        public void onError(final String message) {
-                            activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    showToast(getActivity(), message);
-                                }
-                            });
-                        }
-                    });
+            public AddWordAsyncTask.AddWordResult<String, Long, Integer> onBackground(String word) {
+                if (word == null || word.isEmpty()) {
+                    return null;
                 }
-                String word = getSoundWord(position);
-                if (word ==  null || word.isEmpty()) {
-                    voice.onFinish();
-                    return  null;
-                }
-                String [] words = word.split("\\s+");
-                voice.play(words);
-                return null;
+                return performAddAsync(word);
             }
-        }.execute();
+            @Override
+            public void onPreExecute() {
+                dismissProgressBar();
+                progressDialog.show();
+            }
+        }).execute();
     }
 
     AlertDialog getAddAlertDialog() {
@@ -492,19 +487,25 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         return mAddAlertDialog;
     }
 
-    abstract Activity getActivity();
+    private long getCurrentWordId() {
+        return mId;
+    }
 
-    abstract AddWordResult<String, Long, Integer> performAddAsync(String text);
+    private Uri getContentUri(int type, long id) {
+        return getSecondaryContentUri(type, id);
+    }
 
-    abstract void performAddActions(String text);
+    Uri getContentUri() {
+        return getContentUri(getCurrentLangType(), getCurrentWordId());
+    }
 
-    abstract Uri getContentUri();
+    int getCurrentLangType() {
+        return mLangType;
+    }
 
-    abstract Uri getContentUri(String query);
-
-    abstract int getCurrentLangType();
-
-    abstract int getLoaderId();
+    int getLoaderId() {
+        return loaderId;
+    }
 
     String[] getProjection() {
         return PROJECTION;

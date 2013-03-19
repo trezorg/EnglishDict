@@ -176,7 +176,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
  * @see #setListAdapter
  * @see android.widget.ListView
  */
-public class FragmentListActivity extends SherlockFragmentActivity {
+public class EnglishDictFragmentListActivity extends SherlockFragmentActivity {
     /**
      * This field should be made private, so it is hidden from the SDK.
      * {@hide}

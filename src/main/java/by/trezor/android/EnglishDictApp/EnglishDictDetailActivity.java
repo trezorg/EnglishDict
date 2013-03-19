@@ -4,53 +4,75 @@ import android.app.Activity;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.ListFragment;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 
+import android.util.SparseArray;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.app.SherlockListFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 
 
-public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
+public class EnglishDictDetailActivity extends SherlockFragmentActivity {
 
     private static final String TAG = EnglishDictDetailActivity.class.getSimpleName();
-    private static final int LOADER_ID = 1;
     private int mLangType = ENGLISH_WORDS;
-    private long mId;
+    private String mWord;
+    private ViewPager mPager;
+    private EnglishDictStatePagerAdapter mPagerAdapter;
 
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
         Intent intent = getIntent();
-        long id = intent.getLongExtra("id", -1);
+        long id = intent.getLongExtra(WORD_ID, -1);
         if (id == -1) {
             finish();
             return;
         }
-        int langType = intent.getIntExtra("langType", ENGLISH_WORDS);
-        String word = intent.getStringExtra("word");
+        int langType = intent.getIntExtra(LANG_TYPE, ENGLISH_WORDS);
+        int position = intent.getIntExtra(WORD_POSITION, 0);
+        mWord = intent.getStringExtra(WORD);
         setCurrentLangType(langType);
-        setCurrentWordId(id);
-        setInputLanguage();
-        setContentView(R.layout.english_dict_detail_list);
-        setViewAdapter();
-        restartLoader(null);
-        prepareActionBar(word, langType);
-        registerForContextMenu(getListView());
+        setContentView(R.layout.english_dict_pager);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPagerAdapter = new EnglishDictStatePagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(position);
+        prepareActionBar(mWord, langType);
+        Log.d(TAG, "Set detail activity");
+        mPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                invalidateOptionsMenu();
+            }
+        });
     }
 
     @Override
-    public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu) {
+    public boolean onCreateOptionsMenu(final com.actionbarsherlock.view.Menu menu) {
         com.actionbarsherlock.view.MenuInflater inflate = getSupportMenuInflater();
         inflate.inflate(getAbsMenuLayout(), menu);
+        menu.findItem(R.id.menu_detail_previous).setVisible(mPager.getCurrentItem() > 0);
+        menu.findItem(R.id.menu_detail_next).setVisible(mPager.getCurrentItem() != mPagerAdapter.getCount() - 1);
+        prepareActionBar(getCurrentWord(), getCurrentLangType());
         simulatePlaySound(menu);
         return true;
     }
@@ -59,14 +81,29 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
     public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_add:
-                getAddAlertDialog();
+                ((EnglishDictDetailFragment)getCurrentFragment()).getAddAlertDialog();
                 return true;
             case android.R.id.home:
                 finish();
                 return true;
+            case R.id.menu_detail_previous:
+                mPager.setCurrentItem(mPager.getCurrentItem() - 1);
+                return true;
+            case R.id.menu_detail_next:
+                mPager.setCurrentItem(mPager.getCurrentItem() + 1);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void setCurrentWord() {
+        mWord = mPagerAdapter.getCurrentWord();
+    }
+
+    private String getCurrentWord() {
+        setCurrentWord();
+        return mWord;
     }
 
     private void simulatePlaySound(Menu menu) {
@@ -75,6 +112,65 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
             View view = menuItem.getActionView().findViewById(R.id.english_dict_sound);
             playSound(view);
         }
+    }
+
+    public void playSound(final View view) {
+        final LinearLayout parent = (LinearLayout)view.getParent();
+        final ProgressBar progressBar =
+                (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected void onPreExecute() {
+                progressBar.setVisibility(View.VISIBLE);
+                view.setVisibility(View.GONE);
+                setVolume(getActivity(), 70);
+            }
+            @Override
+            protected Void doInBackground(Void... args) {
+                EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
+                final Activity activity = getActivity();
+                voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
+                    @Override
+                    public void onExecute() {
+                        activity.runOnUiThread(new Runnable() {
+                            public void run() {
+                                progressBar.setVisibility(View.GONE);
+                                view.setVisibility(View.VISIBLE);
+                            }
+                        });
+                    }
+                });
+                if (voice.getOnErrorListener() == null) {
+                    voice.setOnErrorListener(new EnglishDictGoogleVoice.OnErrorListener() {
+                        @Override
+                        public void onError(final String message) {
+                            activity.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    showToast(getActivity(), message);
+                                }
+                            });
+                        }
+                    });
+                }
+                String word = getSoundWord(view);
+                String [] words = word.split("\\s+");
+                voice.play(words);
+                return null;
+            }
+        }.execute();
+    }
+
+    private String getSoundWord(View view) {
+        if (getCurrentLangType() == RUSSIAN_WORDS) {
+            return mWord;
+        }
+        ListFragment fragment = getCurrentFragment();
+        int position = fragment.getListView().getPositionForView((LinearLayout)view.getParent());
+        return ((Cursor)(fragment.getListAdapter().getItem(position))).getString(0);
+    }
+
+    private SherlockListFragment getCurrentFragment() {
+        return (SherlockListFragment) mPagerAdapter.instantiateItem(mPager, mPager.getCurrentItem());
     }
 
     private int getAbsMenuLayout() {
@@ -93,87 +189,96 @@ public class EnglishDictDetailActivity extends EnglishDictBaseActivity {
 
     }
 
-    AddWordResult<String, Long> performAddAsync(String text) {
-        ContentValues values = new ContentValues();
-        values.put("word", text);
-        Uri uri = getContentResolver().insert(getContentUri(), values);
-        Cursor c = getContentResolver().query(uri, null, null, null, null);
-        c.moveToFirst();
-        long wordId = c.getInt(0);
-        String word = c.getString(1);
-        Log.i(TAG, String.format("Added word " + word));
-        c.close();
-        return new AddWordResult<String, Long>(word, wordId);
-    }
-
-
-    void performAddActions(final String text) {
-        new AddWordAsyncTask(this, text).setOnQueryTextListener(new OnExecuteListener() {
-            @Override
-            public void onExecute(AddWordResult<String, Long> result) {
-                if (result == null) {
-                    showToast("Word " + text + " do not exist.");
-                }
-            }
-            @Override
-            public AddWordResult<String, Long> onBackground(String word) {
-                if (word != null && !word.isEmpty()) {
-                    return performAddAsync(word);
-                }
-                return null;
-            }
-        }).execute();
-    }
-
-    @Override
-    String getSoundWord(int pos) {
-        if (getCurrentLangType() == ENGLISH_WORDS) {
-            return super.getSoundWord(pos);
-        }
-        Uri uri = getEnglishContentUri();
-        Cursor cursor = getContentResolver().query(
-                uri, getProjection(),
-                EnglishDictDescriptor.EnglishDictBaseColumns._ID + "=" + getCurrentWordId(),
-                null, null);
-        if (!cursor.moveToFirst()) {
-            return null;
-        }
-        return cursor.getString(0);
-    }
-
     private void setCurrentLangType(int type) {
         mLangType = type;
     }
 
-    private void setCurrentWordId(long id) {
-        mId = id;
-    }
-
-    private long getCurrentWordId() {
-        return mId;
-    }
-
-    private Uri getContentUri(int type, long id) {
-        return getSecondaryContentUri(type, id);
-    }
-
     Uri getContentUri() {
-        return getContentUri(getCurrentLangType(), getCurrentWordId());
-    }
-
-    Uri getContentUri(String search) {
-        return getContentUri();
+        int type = getCurrentLangType();
+        switch (getCurrentLangType()) {
+            case ENGLISH_WORDS:
+                return EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
+            case RUSSIAN_WORDS:
+                return EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
     }
 
     int getCurrentLangType() {
         return mLangType;
     }
 
-    int getLoaderId() {
-        return LOADER_ID;
+    String[] getProjection() {
+        return PROJECTION;
     }
 
-    Activity getActivity() {
+    private Activity getActivity() {
         return this;
+    }
+
+    private class EnglishDictStatePagerAdapter extends FragmentStatePagerAdapter {
+
+        private int records;
+        private Cursor cursor;
+        private SparseArray<ListFragment> registeredFragments = new SparseArray<ListFragment>();
+
+        public EnglishDictStatePagerAdapter(FragmentManager fm) {
+            super(fm);
+            records = getCursor().getCount();
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            Fragment fragment = new EnglishDictDetailFragment();
+            getCursor().moveToPosition(position);
+            long wordId = cursor.getLong(1);
+            Bundle args = new Bundle();
+            args.putLong(WORD_ID, wordId);
+            args.putInt(LANG_TYPE, getCurrentLangType());
+            args.putInt(WORD_POSITION, position);
+            fragment.setArguments(args);
+            closeCursor();
+            return fragment;
+        }
+
+        private Cursor getCursor() {
+            if (cursor == null) {
+                cursor = getContentResolver().query(getContentUri(), getProjection() ,null, null, null);
+            }
+            return cursor;
+        }
+
+        private void closeCursor() {
+            if (cursor != null) {
+                cursor.close();
+            }
+            cursor = null;
+        }
+
+        public String getCurrentWord() {
+            getCursor().moveToPosition(mPager.getCurrentItem());
+            String word = cursor.getString(0);
+            closeCursor();
+            return word;
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            ListFragment fragment = (ListFragment) super.instantiateItem(container, position);
+            registeredFragments.put(position, fragment);
+            return fragment;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            registeredFragments.remove(position);
+            super.destroyItem(container, position, object);
+        }
+
+        @Override
+        public int getCount() {
+            return records;
+        }
     }
 }

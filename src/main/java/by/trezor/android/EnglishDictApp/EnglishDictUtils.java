@@ -2,15 +2,23 @@ package by.trezor.android.EnglishDictApp;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.net.Uri;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -26,6 +34,16 @@ public class EnglishDictUtils {
         put(ENGLISH_WORDS, ENGLISH_WORDS_NAME);
         put(RUSSIAN_WORDS, RUSSIAN_WORDS_NAME);
     }};
+    public static final String[] PROJECTION = new String[] {
+            EnglishDictDescriptor.EnglishDictBaseColumns.WORD,
+            EnglishDictDescriptor.EnglishDictBaseColumns._ID
+    };
+
+    static private Toast mToast;
+    public  static  final String WORD = "word";
+    public  static  final String WORD_ID = "word_id";
+    public  static  final String WORD_POSITION = "word_position";
+    public  static  final String LANG_TYPE = "lang_type";
     static final private String RUSSIAN_LETTERS =
             "[-,абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]";
     static final private String ENGLISH_LETTERS =
@@ -166,5 +184,116 @@ public class EnglishDictUtils {
             return filePath.getAbsolutePath();
         }
         return null;
+    }
+
+    static public int getCursorPositionForId(Cursor cursor, long id) {
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            if (cursor.getLong(cursor.getColumnIndexOrThrow(
+                    EnglishDictDescriptor.EnglishDictBaseColumns._ID)) == id) {
+                return cursor.getPosition();
+            }
+            cursor.moveToNext();
+        }
+        return cursor.getPosition();
+    }
+
+    static void setInputLanguage(int lang) {
+        String langCode = lang == ENGLISH_WORDS ? "EN" : "RU";
+        Resources res = Resources.getSystem();
+        DisplayMetrics dm = res.getDisplayMetrics();
+        Configuration conf = res.getConfiguration();
+        Locale locale = new Locale(langCode.toLowerCase());
+        Locale.setDefault(locale);
+        conf.locale = locale;
+        res.updateConfiguration(conf, dm);
+    }
+
+    static void setVolume(Context context, int percent) {
+        AudioManager audioManager =
+                (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int volume = (maxVolume * percent) / 100;
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+    }
+
+    static void showToast(Context context, String message) {
+        if (mToast == null || mToast.getView().getWindowVisibility() != View.VISIBLE) {
+            mToast = Toast.makeText(context.getApplicationContext(), message, Toast.LENGTH_SHORT);
+        } else {
+            mToast.setText(message);
+        }
+        mToast.show();
+    }
+}
+
+
+class AddWordAsyncTask extends AsyncTask<Void, Void, AddWordAsyncTask.AddWordResult<String, Long, Integer>> {
+
+    private String word;
+    private OnExecuteListener mOnFinishListener;
+
+    static class AddWordResult<Word, Id, Position> {
+
+        private Word word;
+        private Id id;
+        private Position position;
+
+        AddWordResult(Word word, Id id, Position position) {
+            this.word = word;
+            this.id = id;
+            this.position = position;
+        }
+
+        public Word getWord() {
+            return word;
+        }
+
+        public Id getId() {
+            return id;
+        }
+
+        public Position getPosition() {
+            return position;
+        }
+
+    }
+
+    static interface OnExecuteListener {
+        void onExecute(AddWordResult<String, Long, Integer> result);
+        void onPreExecute();
+        AddWordResult<String, Long, Integer> onBackground(String word);
+    }
+
+    AddWordAsyncTask (String word) {
+        super();
+        this.word = word;
+    }
+
+    public AddWordAsyncTask setOnQueryTextListener(OnExecuteListener listener) {
+        mOnFinishListener = listener;
+        return this;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        if (mOnFinishListener != null) {
+            mOnFinishListener.onPreExecute();
+        }
+    }
+
+    @Override
+    protected AddWordResult<String, Long, Integer> doInBackground(Void... args) {
+        if (mOnFinishListener != null) {
+            return mOnFinishListener.onBackground(word);
+        }
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(AddWordResult<String, Long, Integer> result) {
+        if (mOnFinishListener != null) {
+            mOnFinishListener.onExecute(result);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package by.trezor.android.EnglishDictApp;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
@@ -18,6 +19,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.widget.SearchView;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
+import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 
 public class EnglishDictActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {
 
@@ -225,26 +227,35 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
     }
 
     void performAddActions(final String text) {
-        new AddWordAsyncTask(this, text).setOnQueryTextListener(new OnExecuteListener() {
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle(text);
+        progressDialog.setMessage(getString(R.string.processing_translate_text));
+        new AddWordAsyncTask(text).setOnQueryTextListener(new OnExecuteListener() {
             @Override
-            public void onExecute(AddWordResult<String, Long> result) {
+            public void onExecute(AddWordResult<String, Long, Integer> result) {
+                progressDialog.dismiss();
                 if (result == null) {
-                    showToast(String.format("Word %s do not exist.", text));
+                    showToast(getActivity(), String.format("Word %s do not exist.", text));
                     return;
                 }
-                showSecondaryActivity(result.getWord(), result.getId());
+                showSecondaryActivity(result.getWord(), result.getId(), result.getPosition());
             }
             @Override
-            public AddWordResult<String, Long> onBackground(String word) {
+            public AddWordResult<String, Long, Integer> onBackground(String word) {
                 if (word == null || word.isEmpty()) {
                     return null;
                 }
                 return performAddAsync(word);
             }
+            @Override
+            public void onPreExecute() {
+                dismissProgressBar();
+                progressDialog.show();
+            }
         }).execute();
     }
 
-    AddWordResult<String, Long> performAddAsync(String text) {
+    AddWordResult<String, Long, Integer> performAddAsync(String text) {
         String trans = translate(this, text, getCurrentLangType());
         Log.i(TAG, String.format("Translated: %s -> %s", text, trans));
         if (trans == null) { return null; }
@@ -253,10 +264,15 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         ContentValues values = new ContentValues();
         values.put("word", text);
         Uri uri = getContentResolver().insert(getContentUri(), values);
-        Cursor c = getContentResolver().query(uri, null, null, null, null);
-        c.moveToFirst();
-        long wordId = c.getInt(0);
-        String word = c.getString(1);
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        long wordId = cursor.getLong(0);
+        String word = cursor.getString(1);
+        cursor.close();
+        // get cursor position for ID
+        cursor = getContentResolver().query(getContentUri(), null, null, null, null);
+        int position = getCursorPositionForId(cursor, wordId);
+        cursor.close();
         Log.i(TAG, String.format("Added word " + word));
         Uri secondaryUri = getSecondaryContentUri(
             getCurrentLangType() == ENGLISH_WORDS ?
@@ -265,8 +281,7 @@ public class EnglishDictActivity extends EnglishDictBaseActivity implements Acti
         values.put("word", trans);
         getContentResolver().insert(secondaryUri, values);
         Log.i(TAG, String.format("Added word " + trans));
-        c.close();
-        return new AddWordResult<String, Long>(word, wordId);
+        return new AddWordResult<String, Long, Integer>(word, wordId, position);
     }
 
     private Uri getContentUri(int type, String search) {
