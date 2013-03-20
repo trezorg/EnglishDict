@@ -6,6 +6,7 @@ import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentTransaction;
@@ -195,6 +196,9 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
                 saveCurrentOrdering(mOrder.isRatingOrdering() ?
                         (mOrder.isReverse() ? SORT_ORDER.RATING : SORT_ORDER.RATING_REVERSE) :
                         SORT_ORDER.RATING);
+                return true;
+            case R.id.menu_settings:
+                showPreferences(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

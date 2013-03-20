@@ -1,13 +1,18 @@
 package by.trezor.android.EnglishDictApp;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -28,8 +33,11 @@ public class EnglishDictUtils {
     private static final String TAG = EnglishDictUtils.class.getSimpleName();
     public static final int ENGLISH_WORDS = 0;
     public static final int RUSSIAN_WORDS = 1;
+    protected static final int RESULT_SPEECH = 1013;
+    protected static final int SHOW_PREFERENCES = 1014;
     public static final String ENGLISH_WORDS_NAME = "en";
     public static final String RUSSIAN_WORDS_NAME = "ru";
+    public static final String PLAY_SOUND_ON_SLIDE = "PLAY_SOUND_ON_SLIDE";
     public static final Map<Integer, String> LANG_MAP = new HashMap<Integer, String>() {{
         put(ENGLISH_WORDS, ENGLISH_WORDS_NAME);
         put(RUSSIAN_WORDS, RUSSIAN_WORDS_NAME);
@@ -226,6 +234,21 @@ public class EnglishDictUtils {
         }
         mToast.show();
     }
+
+    static boolean shouldPronounceSound(Context context) {
+        Context applicationContext = context.getApplicationContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext);
+        return preferences.getBoolean(PLAY_SOUND_ON_SLIDE, true);
+    }
+
+    static void showPreferences(Activity activity) {
+        Class c = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB ?
+                EnglishDictPreferenceActivity.class :
+                EnglishDictPreferenceFragmentActivity.class;
+        Intent intent = new Intent(activity, c);
+        activity.startActivityForResult(intent, SHOW_PREFERENCES);
+    }
+
 }
 
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pronunciation_category_name">
+        <CheckBoxPreference
+            android:key="PLAY_SOUND_ON_SLIDE"
+            android:title="@string/pronunciation_checkbox_title"
+            android:summary="@string/pronunciation_checkbox_summary"
+            android:defaultValue="true"
+            />
+    </PreferenceCategory>
+
+</PreferenceScreen>

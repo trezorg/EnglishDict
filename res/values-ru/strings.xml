@@ -29,4 +29,9 @@
     <string name="speech_support">Ваше устройство не поддерживает технологию Speech To Text</string>
     <string name="order_name">Имя</string>
     <string name="order_rating">Рейтинг</string>
+    <string name="pronunciation_category_name">Найстройки произношения</string>
+    <string name="pronunciation_checkbox_title">Произносить слова</string>
+    <string name="pronunciation_checkbox_summary">Произносить английские слова при листании страниц</string>
+    <string name="settings_title">Насторойки приложения</string>
+    <string name="settings_summary">Насторойки EnglishDict приложения</string>
 </resources>

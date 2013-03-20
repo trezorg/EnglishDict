@@ -5,6 +5,7 @@ import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -91,6 +92,9 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
             case R.id.menu_add:
                 ((EnglishDictDetailFragment)getCurrentFragment()).getAddAlertDialog();
                 return true;
+            case R.id.menu_settings:
+                showPreferences(this);
+                return true;
             case android.R.id.home:
                 finish();
                 return true;
@@ -116,7 +120,8 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
 
     private void simulatePlaySound(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.menu_detail_sound);
-        if (menuItem != null) {
+        boolean isPlaySound = shouldPronounceSound(this);
+        if (menuItem != null && isPlaySound) {
             View view = menuItem.getActionView().findViewById(R.id.english_dict_sound);
             playSound(view);
         }

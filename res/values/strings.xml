@@ -36,4 +36,9 @@
     <string name="translateClientKey">RxaztEaI7bGU8rusQfgw1AC0tWwsHfCqkTytW6y/AB8=</string>
     <string name="order_name">Name</string>
     <string name="order_rating">Rating</string>
+    <string name="settings_title">Application settings</string>
+    <string name="settings_summary">Settings for EnglishDict application</string>
+    <string name="pronunciation_category_name">Pronunciation settings</string>
+    <string name="pronunciation_checkbox_title">Pronounce words</string>
+    <string name="pronunciation_checkbox_summary">Pronounce english words when the activity is slided</string>
 </resources>

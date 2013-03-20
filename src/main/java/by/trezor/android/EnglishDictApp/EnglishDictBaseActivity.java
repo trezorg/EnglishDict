@@ -35,7 +35,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = EnglishDictBaseActivity.class.getSimpleName();
-    protected static final int RESULT_SPEECH = 1013;
     private AlertDialog mAddAlertDialog;
     private SimpleCursorAdapter mAdapter;
     private ProgressBar mProgressBar;

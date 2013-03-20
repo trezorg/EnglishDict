@@ -32,12 +32,10 @@ import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 
 
-class EnglishDictDetailFragment extends SherlockListFragment implements
+public class EnglishDictDetailFragment extends SherlockListFragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = EnglishDictDetailFragment.class.getSimpleName();
-    protected static final int RESULT_SPEECH = 1013;
-    static final int RESULT_OK = -1;
     private AlertDialog mAddAlertDialog;
     private Toast mToast;
     private SimpleCursorAdapter mAdapter;
@@ -178,7 +176,7 @@ class EnglishDictDetailFragment extends SherlockListFragment implements
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case RESULT_SPEECH: {
-                if (resultCode == RESULT_OK && data != null) {
+                if (resultCode == Activity.RESULT_OK && data != null) {
                     ArrayList<String> text =
                             data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     createSpeechChoiceDialog(text);
