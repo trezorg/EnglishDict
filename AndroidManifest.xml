@@ -13,7 +13,7 @@
         <provider android:name=".provider.EnglishDictContentProvider"
             android:authorities="by.trezor.android.EnglishDictApp" />
         <activity
-            android:name=".EnglishDictActivity"
+            android:name=".EnglishDictMainActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

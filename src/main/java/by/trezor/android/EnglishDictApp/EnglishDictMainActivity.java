@@ -23,9 +23,9 @@ import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
-public class EnglishDictActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {
+public class EnglishDictMainActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {
 
-    private static final String TAG = EnglishDictActivity.class.getSimpleName();
+    private static final String TAG = EnglishDictMainActivity.class.getSimpleName();
     private static final String LIST_STATE = "listState";
     private static final String LIST_LANG = "listLang";
     private int mLangType = ENGLISH_WORDS;
