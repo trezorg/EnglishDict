@@ -78,7 +78,7 @@ public class EnglishDictGoogleVoice {
         }
     }
 
-    private String getLocalFilePath(String word) throws IOException {
+    private String getFilePath(String word) throws IOException {
         String localPath = checkFile(word, DICTIONARY_FILES_DIRECTORY);
         if (localPath == null) {
             String url = getUrlEnglishVoiceUrl(word);
@@ -90,7 +90,7 @@ public class EnglishDictGoogleVoice {
     void play(String[] words) {
         for (String word: words) {
             try {
-                mediaQueue.add(getLocalFilePath(word));
+                mediaQueue.add(getFilePath(word));
             } catch (IOException ex) {
                 prepareError("Cannot download file: " + getUrlEnglishVoiceUrl(word), ex);
             }

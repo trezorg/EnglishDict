@@ -123,6 +123,7 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
         boolean isPlaySound = shouldPronounceSound(this);
         if (menuItem != null && isPlaySound) {
             View view = menuItem.getActionView().findViewById(R.id.english_dict_sound);
+            EnglishDictGoogleVoice.getInstance().onFinish();
             playSound(view);
         }
     }
