@@ -1,5 +1,6 @@
 package by.trezor.android.EnglishDictApp;
 
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.util.Log;
 
@@ -7,8 +8,7 @@ import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.checkFile;
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.downloadFile;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 
 
 public class EnglishDictGoogleVoice {
@@ -23,6 +23,8 @@ public class EnglishDictGoogleVoice {
     private Queue<OnExecuteListener> onExecuteListener =
             new ConcurrentLinkedQueue<OnExecuteListener>();
     private OnErrorListener onErrorListener;
+    private Context context;
+    private boolean isNetworkAvailable;
 
     private EnglishDictGoogleVoice() {}
 
@@ -80,17 +82,27 @@ public class EnglishDictGoogleVoice {
 
     private String getFilePath(String word) throws IOException {
         String localPath = checkFile(word, DICTIONARY_FILES_DIRECTORY);
-        if (localPath == null) {
+        if (localPath == null && isNetworkAvailable(context)) {
             String url = getUrlEnglishVoiceUrl(word);
             localPath = downloadFile(url, word, DICTIONARY_FILES_DIRECTORY);
         }
         return localPath;
     }
 
+    void setContext(Context context) {
+        if (this.context == null) {
+            this.context = context;
+        }
+    }
+
     void play(String[] words) {
+        isNetworkAvailable = isNetworkAvailable(context);
         for (String word: words) {
             try {
-                mediaQueue.add(getFilePath(word));
+                String filePath = getFilePath(word);
+                if (filePath != null) {
+                    mediaQueue.add(filePath);
+                }
             } catch (IOException ex) {
                 prepareError("Cannot download file: " + getUrlEnglishVoiceUrl(word), ex);
             }
@@ -168,7 +180,9 @@ public class EnglishDictGoogleVoice {
             public void onCompletion(MediaPlayer mp) {
                 if (mediaQueue.isEmpty()) {
                     onFinish();
-                } else { onStart(); }
+                } else {
+                    onStart();
+                }
             }
         });
         mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){

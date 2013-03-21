@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 
 

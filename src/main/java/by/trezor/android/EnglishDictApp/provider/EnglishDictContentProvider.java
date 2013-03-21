@@ -13,7 +13,7 @@ import android.text.TextUtils;
 
 import java.util.*;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.join;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.join;
 
 /**
  * Simple content provider that demonstrates the basics of creating a content

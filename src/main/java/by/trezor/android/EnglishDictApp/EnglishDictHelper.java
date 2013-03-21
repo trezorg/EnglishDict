@@ -9,12 +9,15 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.Toast;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
@@ -22,15 +25,13 @@ import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 
-public class EnglishDictUtils {
+public class EnglishDictHelper {
 
-    private static final String TAG = EnglishDictUtils.class.getSimpleName();
+    private static final String TAG = EnglishDictHelper.class.getSimpleName();
     public static final int ENGLISH_WORDS = 0;
     public static final int RUSSIAN_WORDS = 1;
     protected static final int RESULT_SPEECH = 1013;
@@ -38,7 +39,7 @@ public class EnglishDictUtils {
     public static final String ENGLISH_WORDS_NAME = "en";
     public static final String RUSSIAN_WORDS_NAME = "ru";
     public static final String PLAY_SOUND_ON_SLIDE = "PLAY_SOUND_ON_SLIDE";
-    public static final Map<Integer, String> LANG_MAP = new HashMap<Integer, String>() {{
+    public static final SparseArray<String> LANG_MAP = new SparseArray<String>() {{
         put(ENGLISH_WORDS, ENGLISH_WORDS_NAME);
         put(RUSSIAN_WORDS, RUSSIAN_WORDS_NAME);
     }};
@@ -66,7 +67,7 @@ public class EnglishDictUtils {
     static final Pattern ENGLISH_LETTERS_PATTERN =
             Pattern.compile(ENGLISH_LETTERS_REGEXP);
 
-    private EnglishDictUtils () {}
+    private EnglishDictHelper() {}
 
     public static String readAssetFile(Context context, String filename) throws IOException {
         return readAssetFile(context.getResources().getAssets(), filename);
@@ -235,7 +236,7 @@ public class EnglishDictUtils {
         mToast.show();
     }
 
-    static boolean shouldPronounceSound(Context context) {
+    static boolean isPronouncedSound(Context context) {
         Context applicationContext = context.getApplicationContext();
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext);
         return preferences.getBoolean(PLAY_SOUND_ON_SLIDE, true);
@@ -249,6 +250,12 @@ public class EnglishDictUtils {
         activity.startActivityForResult(intent, SHOW_PREFERENCES);
     }
 
+    static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 }
 
 

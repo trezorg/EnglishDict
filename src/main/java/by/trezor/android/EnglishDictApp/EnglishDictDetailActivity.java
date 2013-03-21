@@ -5,7 +5,6 @@ import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -27,7 +26,7 @@ import com.actionbarsherlock.app.SherlockListFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
 
@@ -120,8 +119,7 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
 
     private void simulatePlaySound(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.menu_detail_sound);
-        boolean isPlaySound = shouldPronounceSound(this);
-        if (menuItem != null && isPlaySound) {
+        if (menuItem != null && isPronouncedSound(this)) {
             View view = menuItem.getActionView().findViewById(R.id.english_dict_sound);
             EnglishDictGoogleVoice.getInstance().onFinish();
             playSound(view);
@@ -142,6 +140,7 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
             @Override
             protected Void doInBackground(Void... args) {
                 EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
+                voice.setContext(getActivity());
                 final Activity activity = getActivity();
                 voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
                     @Override

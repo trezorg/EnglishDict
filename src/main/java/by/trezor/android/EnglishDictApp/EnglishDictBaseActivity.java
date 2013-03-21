@@ -3,15 +3,12 @@ package by.trezor.android.EnglishDictApp;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
@@ -27,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 
 
@@ -168,17 +165,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
             }
         });
         builder.show();
-    }
-
-    void setInputLanguage() {
-        String langCode = getCurrentLangType() == ENGLISH_WORDS ? "EN" : "RU";
-        Resources res = getResources();
-        DisplayMetrics dm = res.getDisplayMetrics();
-        Configuration conf = res.getConfiguration();
-        Locale locale = new Locale(langCode.toLowerCase());
-        Locale.setDefault(locale);
-        conf.locale = locale;
-        res.updateConfiguration(conf, dm);
     }
 
     void showProgressBar() {
@@ -408,6 +394,7 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
             @Override
             protected Void doInBackground(Void... args) {
                 EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
+                voice.setContext(getActivity());
                 final Activity activity = getActivity();
                 voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
                     @Override

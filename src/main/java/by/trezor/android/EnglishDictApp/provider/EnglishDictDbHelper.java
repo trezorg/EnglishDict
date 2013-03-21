@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.readAssetFile;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.readAssetFile;
 
 import java.io.*;
 
@@ -48,7 +48,7 @@ public class EnglishDictDbHelper extends SQLiteOpenHelper {
         fillDatabase(sqLiteDatabase);
     }
 
-    private final void execSqlFile(SQLiteDatabase sqLiteDatabase, String filename, String regex) {
+    private void execSqlFile(SQLiteDatabase sqLiteDatabase, String filename, String regex) {
         String sql;
         try {
             sql = readAssetFile(context, filename);
@@ -68,23 +68,23 @@ public class EnglishDictDbHelper extends SQLiteOpenHelper {
         }
     }
 
-    private final void execSqlFile(SQLiteDatabase sqLiteDatabase, String filename) {
+    private void execSqlFile(SQLiteDatabase sqLiteDatabase, String filename) {
         execSqlFile(sqLiteDatabase, filename, ";");
     }
 
-    private final void createDatabase(SQLiteDatabase sqLiteDatabase) {
+    private void createDatabase(SQLiteDatabase sqLiteDatabase) {
         execSqlFile(sqLiteDatabase, DATABASE_SCHEMA_SQL_FILE);
     }
 
-    private final void fillDatabase(SQLiteDatabase sqLiteDatabase) {
+    private void fillDatabase(SQLiteDatabase sqLiteDatabase) {
         execSqlFile(sqLiteDatabase, DATABASE_DATA_SQL_FILE);
     }
 
-    private final void addTriggers(SQLiteDatabase sqLiteDatabase) {
+    private void addTriggers(SQLiteDatabase sqLiteDatabase) {
         execSqlFile(sqLiteDatabase, DATABASE_TRIGGERS_SQL_FILE, "---");
     }
 
-    private final void dropDatabase(SQLiteDatabase sqLiteDatabase) {
+    private void dropDatabase(SQLiteDatabase sqLiteDatabase) {
         execSqlFile(sqLiteDatabase, DATABASE_DROP_SQL_FILE);
     }
 }

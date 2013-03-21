@@ -6,7 +6,6 @@ import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentTransaction;
@@ -20,7 +19,7 @@ import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.widget.SearchView;
 
-import static by.trezor.android.EnglishDictApp.EnglishDictUtils.*;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
@@ -40,7 +39,6 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
     public void onCreate(Bundle state) {
         setCurrentLangType(getLangType(state));
         super.onCreate(state);
-        setInputLanguage();
         setContentView(R.layout.english_dict_list);
         setViewAdapter();
         handleIntent(getIntent());
