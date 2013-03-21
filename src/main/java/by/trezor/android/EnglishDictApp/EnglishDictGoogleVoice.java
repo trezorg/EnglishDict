@@ -5,8 +5,10 @@ import android.media.MediaPlayer;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 
@@ -20,6 +22,7 @@ public class EnglishDictGoogleVoice {
     private static final String DICTIONARY_FILES_DIRECTORY = "dictMp3";
     private MediaPlayer mediaPlayer;
     private Queue<String> mediaQueue = new ConcurrentLinkedQueue<String>();
+    private Queue<String> wordsQueue = new ConcurrentLinkedQueue<String>();
     private Queue<OnExecuteListener> onExecuteListener =
             new ConcurrentLinkedQueue<OnExecuteListener>();
     private OnErrorListener onErrorListener;
@@ -82,7 +85,7 @@ public class EnglishDictGoogleVoice {
 
     private String getFilePath(String word) throws IOException {
         String localPath = checkFile(word, DICTIONARY_FILES_DIRECTORY);
-        if (localPath == null && isNetworkAvailable(context)) {
+        if (localPath == null && isNetworkAvailable) {
             String url = getUrlEnglishVoiceUrl(word);
             localPath = downloadFile(url, word, DICTIONARY_FILES_DIRECTORY);
         }
@@ -95,19 +98,27 @@ public class EnglishDictGoogleVoice {
         }
     }
 
+    void prepareFile(String word) {
+        if (word == null) {
+            return;
+        }
+        try {
+            String filePath = getFilePath(word);
+            if (filePath != null) {
+                mediaQueue.add(filePath);
+            }
+        } catch (IOException ex) {
+            prepareError("Cannot download file: " + getUrlEnglishVoiceUrl(word), ex);
+        }
+    }
+
     void play(String[] words) {
         isNetworkAvailable = isNetworkAvailable(context);
-        for (String word: words) {
-            try {
-                String filePath = getFilePath(word);
-                if (filePath != null) {
-                    mediaQueue.add(filePath);
-                }
-            } catch (IOException ex) {
-                prepareError("Cannot download file: " + getUrlEnglishVoiceUrl(word), ex);
-            }
+        // add words to wordsQueue
+        wordsQueue.addAll(Arrays.asList(words));
+        if (!isPlaying()) {
+            playQueue();
         }
-        playQueue();
     }
 
     private void onExecute() {
@@ -120,68 +131,92 @@ public class EnglishDictGoogleVoice {
         }
     }
 
-    private boolean ensureMediaPlayer() {
+    synchronized private void ensureMediaPlayer() {
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
-            return true;
+            return;
         }
-        return false;
+        try {
+            mediaPlayer.reset();
+        } catch (IllegalStateException ignored) {}
     }
 
-    private void onFinish(MediaPlayer mp) {
-        if (mp != null) {
-            mp.stop();
-            mp.release();
+    synchronized void finish() {
+        if (mediaPlayer != null) {
+            try {
+                if (isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                if (mediaPlayer != null) {
+                    mediaPlayer.release();
+                }
+            } catch (IllegalAccessError ex) {
+                Log.d(TAG, "The error has been occurred during mediaPlayer finishing", ex);
+            } finally {
+                mediaPlayer = null;
+            }
         }
         mediaQueue.clear();
+        wordsQueue.clear();
         onExecute();
     }
 
-    void onFinish() {
-        onFinish(mediaPlayer);
-        mediaPlayer = null;
-    }
-
-    private void onStart(MediaPlayer mp) {
+    private void start() {
+        ensureMediaPlayer();
         String path = mediaQueue.poll();
         if (path == null) {
             return;
         }
         try {
-            mp.setDataSource(path);
-            mp.prepare();
-            mp.start();
+            mediaPlayer.setDataSource(path);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
         } catch (Exception ex) {
             prepareError("Cannot play file: " + path, ex);
             onExecute();
         }
     }
 
-    private void onStart(MediaPlayer mp, boolean isNew) {
-        if (!isNew) {
-            mp.reset();
+    private boolean isPlaying() {
+        try {
+            return mediaPlayer != null && mediaPlayer.isPlaying();
+        } catch (IllegalStateException e) {
+            return false;
         }
-        onStart(mp);
     }
 
-    private void onStart() {
-        boolean isNew = ensureMediaPlayer();
-        onStart(mediaPlayer, isNew);
+    private void playNextWord() {
+        prepareFile(wordsQueue.poll());
+        if (!mediaQueue.isEmpty()) {
+            start();
+        } else {
+            while (!wordsQueue.isEmpty()) {
+                prepareFile(wordsQueue.poll());
+                if (!mediaQueue.isEmpty()) {
+                    break;
+                }
+            }
+            if (!mediaQueue.isEmpty()) {
+                start();
+            } else {
+                finish();
+            }
+        }
     }
 
     void playQueue() {
-        if (mediaQueue.isEmpty()) {
-            onFinish();
+        if (wordsQueue.isEmpty()) {
+            finish();
             return;
         }
         ensureMediaPlayer();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                if (mediaQueue.isEmpty()) {
-                    onFinish();
+                if (wordsQueue.isEmpty()) {
+                    finish();
                 } else {
-                    onStart();
+                    playNextWord();
                 }
             }
         });
@@ -189,9 +224,10 @@ public class EnglishDictGoogleVoice {
             @Override
             public boolean onError (MediaPlayer mp, int what, int extra) {
                 prepareError("Cannot play file");
+                mediaPlayer.reset();
                 return false;
             }
         });
-        onStart();
+        playNextWord();
     }
 }

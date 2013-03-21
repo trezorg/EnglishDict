@@ -20,7 +20,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.widget.SearchView;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
-import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.AddWordAsyncTask.*;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
 public class EnglishDictMainActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -38,6 +39,7 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
     private String mWord;
     private ViewPager mPager;
     private EnglishDictStatePagerAdapter mPagerAdapter;
+    private Handler mHandler = new Handler();
 
     @Override
     public void onCreate(Bundle state) {
@@ -81,7 +83,12 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
         menu.findItem(R.id.menu_detail_previous).setVisible(mPager.getCurrentItem() > 0);
         menu.findItem(R.id.menu_detail_next).setVisible(mPager.getCurrentItem() != mPagerAdapter.getCount() - 1);
         prepareActionBar(getCurrentWord(), getCurrentLangType());
-        simulatePlaySound(menu);
+        mHandler.removeCallbacksAndMessages(null);
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
+                simulatePlaySound(menu);
+            }
+        }, VOICE_WORD_TIMEOUT);
         return true;
     }
 
@@ -121,27 +128,35 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
         MenuItem menuItem = menu.findItem(R.id.menu_detail_sound);
         if (menuItem != null && isPronouncedSound(this)) {
             View view = menuItem.getActionView().findViewById(R.id.english_dict_sound);
-            EnglishDictGoogleVoice.getInstance().onFinish();
-            playSound(view);
+            playSound(view, true);
         }
     }
 
-    public void playSound(final View view) {
+    public final void playSound(final View view) {
+        playSound(view, false);
+    }
+
+    public final void playSound(final View view, final boolean cancel) {
         final LinearLayout parent = (LinearLayout)view.getParent();
         final ProgressBar progressBar =
                 (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
+        final EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected void onPreExecute() {
                 progressBar.setVisibility(View.VISIBLE);
                 view.setVisibility(View.GONE);
-                setVolume(getActivity(), 70);
             }
             @Override
             protected Void doInBackground(Void... args) {
-                EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
-                voice.setContext(getActivity());
+                if (isCancelled()) {
+                    return null;
+                }
                 final Activity activity = getActivity();
+                voice.setContext(activity);
+                if (cancel) {
+                    voice.finish();
+                }
                 voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
                     @Override
                     public void onExecute() {
@@ -159,16 +174,22 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
                         public void onError(final String message) {
                             activity.runOnUiThread(new Runnable() {
                                 public void run() {
-                                    showToast(getActivity(), message);
+                                    showToast(activity, message);
                                 }
                             });
                         }
                     });
                 }
-                String word = getSoundWord(view);
-                String [] words = word.split("\\s+");
-                voice.play(words);
+                if (isCancelled()) {
+                    return null;
+                }
+                voice.play(getSoundWord(view).split("\\s+"));
                 return null;
+            }
+
+            @Override
+            protected void onCancelled(Void result) {
+                voice.finish();
             }
         }.execute();
     }
@@ -178,7 +199,7 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
             return mWord;
         }
         ListFragment fragment = getCurrentFragment();
-        int position = fragment.getListView().getPositionForView((LinearLayout)view.getParent());
+        int position = fragment.getListView().getPositionForView((LinearLayout) view.getParent());
         return ((Cursor)(fragment.getListAdapter().getItem(position))).getString(0);
     }
 
@@ -239,60 +260,43 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
     private class EnglishDictStatePagerAdapter extends FragmentStatePagerAdapter {
 
         private int records;
-        private Cursor cursor;
-        private SparseArray<ListFragment> registeredFragments = new SparseArray<ListFragment>();
+        private SparseArray<String> registeredWords = new SparseArray<String>();
 
         public EnglishDictStatePagerAdapter(FragmentManager fm) {
             super(fm);
-            records = getCursor().getCount();
+            Cursor cursor = getCursor();
+            records = cursor.getCount();
+            cursor.close();
         }
 
         @Override
         public Fragment getItem(int position) {
             Fragment fragment = new EnglishDictDetailFragment();
-            getCursor().moveToPosition(position);
+            Cursor cursor = getCursor();
+            cursor.moveToPosition(position);
             long wordId = cursor.getLong(1);
+            registeredWords.put(position, cursor.getString(0));
+            cursor.close();
             Bundle args = new Bundle();
             args.putLong(WORD_ID, wordId);
             args.putInt(LANG_TYPE, getCurrentLangType());
             args.putInt(WORD_POSITION, position);
             fragment.setArguments(args);
-            closeCursor();
             return fragment;
         }
 
         private Cursor getCursor() {
-            if (cursor == null) {
-                cursor = getContentResolver().query(getContentUri(), getProjection() ,null, null, null);
-            }
-            return cursor;
-        }
-
-        private void closeCursor() {
-            if (cursor != null) {
-                cursor.close();
-            }
-            cursor = null;
+            return getContentResolver().query(getContentUri(), getProjection() ,null, null, null);
         }
 
         public String getCurrentWord() {
-            getCursor().moveToPosition(mPager.getCurrentItem());
-            String word = cursor.getString(0);
-            closeCursor();
-            return word;
-        }
-
-        @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-            ListFragment fragment = (ListFragment) super.instantiateItem(container, position);
-            registeredFragments.put(position, fragment);
-            return fragment;
+            return registeredWords.get(mPager.getCurrentItem());
         }
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
-            registeredFragments.remove(position);
             super.destroyItem(container, position, object);
+            registeredWords.remove(position);
         }
 
         @Override

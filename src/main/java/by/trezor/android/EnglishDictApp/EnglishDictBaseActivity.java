@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
-import static by.trezor.android.EnglishDictApp.AddWordAsyncTask.*;
+import static by.trezor.android.EnglishDictApp.EnglishDictHelper.AddWordAsyncTask.AddWordResult;
 
 
 public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListActivity implements
@@ -383,19 +383,17 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         final LinearLayout parent = (LinearLayout)view.getParent();
         final ProgressBar progressBar =
                 (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
-        final int position = getViewPosition(view);
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected void onPreExecute() {
                 progressBar.setVisibility(View.VISIBLE);
                 view.setVisibility(View.GONE);
-                setVolume(getActivity(), 70);
             }
             @Override
             protected Void doInBackground(Void... args) {
-                EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
-                voice.setContext(getActivity());
+                final EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
                 final Activity activity = getActivity();
+                voice.setContext(activity);
                 voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
                     @Override
                     public void onExecute() {
@@ -419,13 +417,13 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
                         }
                     });
                 }
+                final int position = getViewPosition(view);
                 String word = getSoundWord(position);
                 if (word ==  null || word.isEmpty()) {
-                    voice.onFinish();
+                    voice.finish();
                     return  null;
                 }
-                String [] words = word.split("\\s+");
-                voice.play(words);
+                voice.play(word.split("\\s+"));
                 return null;
             }
         }.execute();

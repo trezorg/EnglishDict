@@ -19,6 +19,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
+import android.view.animation.Interpolator;
+import android.widget.Scroller;
 import android.widget.Toast;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 
@@ -36,6 +38,7 @@ public class EnglishDictHelper {
     public static final int RUSSIAN_WORDS = 1;
     protected static final int RESULT_SPEECH = 1013;
     protected static final int SHOW_PREFERENCES = 1014;
+    protected static final int VOICE_WORD_TIMEOUT = 700;
     public static final String ENGLISH_WORDS_NAME = "en";
     public static final String RUSSIAN_WORDS_NAME = "ru";
     public static final String PLAY_SOUND_ON_SLIDE = "PLAY_SOUND_ON_SLIDE";
@@ -256,75 +259,75 @@ public class EnglishDictHelper {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
-}
 
 
-class AddWordAsyncTask extends AsyncTask<Void, Void, AddWordAsyncTask.AddWordResult<String, Long, Integer>> {
+    static class AddWordAsyncTask extends AsyncTask<Void, Void, AddWordAsyncTask.AddWordResult<String, Long, Integer>> {
 
-    private String word;
-    private OnExecuteListener mOnFinishListener;
+        private String word;
+        private OnExecuteListener mOnFinishListener;
 
-    static class AddWordResult<Word, Id, Position> {
+        static class AddWordResult<Word, Id, Position> {
 
-        private Word word;
-        private Id id;
-        private Position position;
+            private Word word;
+            private Id id;
+            private Position position;
 
-        AddWordResult(Word word, Id id, Position position) {
+            AddWordResult(Word word, Id id, Position position) {
+                this.word = word;
+                this.id = id;
+                this.position = position;
+            }
+
+            public Word getWord() {
+                return word;
+            }
+
+            public Id getId() {
+                return id;
+            }
+
+            public Position getPosition() {
+                return position;
+            }
+
+        }
+
+        static interface OnExecuteListener {
+            void onExecute(AddWordResult<String, Long, Integer> result);
+            void onPreExecute();
+            AddWordResult<String, Long, Integer> onBackground(String word);
+        }
+
+        AddWordAsyncTask (String word) {
+            super();
             this.word = word;
-            this.id = id;
-            this.position = position;
         }
 
-        public Word getWord() {
-            return word;
+        public AddWordAsyncTask setOnQueryTextListener(OnExecuteListener listener) {
+            mOnFinishListener = listener;
+            return this;
         }
 
-        public Id getId() {
-            return id;
+        @Override
+        protected void onPreExecute() {
+            if (mOnFinishListener != null) {
+                mOnFinishListener.onPreExecute();
+            }
         }
 
-        public Position getPosition() {
-            return position;
+        @Override
+        protected AddWordResult<String, Long, Integer> doInBackground(Void... args) {
+            if (mOnFinishListener != null) {
+                return mOnFinishListener.onBackground(word);
+            }
+            return null;
         }
 
-    }
-
-    static interface OnExecuteListener {
-        void onExecute(AddWordResult<String, Long, Integer> result);
-        void onPreExecute();
-        AddWordResult<String, Long, Integer> onBackground(String word);
-    }
-
-    AddWordAsyncTask (String word) {
-        super();
-        this.word = word;
-    }
-
-    public AddWordAsyncTask setOnQueryTextListener(OnExecuteListener listener) {
-        mOnFinishListener = listener;
-        return this;
-    }
-
-    @Override
-    protected void onPreExecute() {
-        if (mOnFinishListener != null) {
-            mOnFinishListener.onPreExecute();
-        }
-    }
-
-    @Override
-    protected AddWordResult<String, Long, Integer> doInBackground(Void... args) {
-        if (mOnFinishListener != null) {
-            return mOnFinishListener.onBackground(word);
-        }
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(AddWordResult<String, Long, Integer> result) {
-        if (mOnFinishListener != null) {
-            mOnFinishListener.onExecute(result);
+        @Override
+        protected void onPostExecute(AddWordResult<String, Long, Integer> result) {
+            if (mOnFinishListener != null) {
+                mOnFinishListener.onExecute(result);
+            }
         }
     }
 }
