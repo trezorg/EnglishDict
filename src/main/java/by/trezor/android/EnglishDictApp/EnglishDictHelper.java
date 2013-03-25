@@ -19,8 +19,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
-import android.view.animation.Interpolator;
-import android.widget.Scroller;
 import android.widget.Toast;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 
@@ -134,7 +132,7 @@ public class EnglishDictHelper {
         return replaceNotExpectedPattern(text, pattern, null);
     }
 
-    static public String translate(String clientId, String clientKey, String text, int from, int to) {
+    static public String[] translate(String clientId, String clientKey, String text, int from, int to) {
         EnglishDictBingTranslate trans = new EnglishDictBingTranslate(clientId, clientKey);
         try {
             return trans.translate(text, LANG_MAP.get(from), LANG_MAP.get(to));
@@ -144,7 +142,7 @@ public class EnglishDictHelper {
         }
     }
 
-    static public String translate(Context context, String text, int from) {
+    static public String[] translate(Context context, String text, int from) {
         int to = from == ENGLISH_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS;
         String clientId = context.getResources().getString(R.string.translateClientId);
         String clientKey = context.getResources().getString(R.string.translateClientKey);

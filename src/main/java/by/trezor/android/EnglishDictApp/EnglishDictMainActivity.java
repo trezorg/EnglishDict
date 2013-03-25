@@ -23,6 +23,10 @@ import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.AddWordAsyncTask.*;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class EnglishDictMainActivity extends EnglishDictBaseActivity implements ActionBar.TabListener {
 
     private static final String TAG = EnglishDictMainActivity.class.getSimpleName();
@@ -287,11 +291,11 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
     }
 
     AddWordResult<String, Long, Integer> performAddAsync(String text) {
-        String trans = translate(this, text, getCurrentLangType());
-        Log.i(TAG, String.format("Translated: %s -> %s", text, trans));
-        if (trans == null) { return null; }
-        trans = trans.toLowerCase();
-        if (trans == null || trans.isEmpty() || trans.equals(text)) { return null; }
+        String[] res = translate(this, text, getCurrentLangType());
+        Log.i(TAG, String.format("Translated: %s -> %s", text, Arrays.toString(res)));
+        if (res == null || res.length == 0) { return null; }
+        List<String> trans = new ArrayList<String>();
+        for (String w: res) { trans.add(w.toLowerCase()); }
         ContentValues values = new ContentValues();
         values.put("word", text);
         Uri uri = getContentResolver().insert(getContentUri(), values);
@@ -308,9 +312,11 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
         Uri secondaryUri = getSecondaryContentUri(
             getCurrentLangType() == ENGLISH_WORDS ?
                     RUSSIAN_WORDS : ENGLISH_WORDS, wordId);
-        values = new ContentValues();
-        values.put("word", trans);
-        getContentResolver().insert(secondaryUri, values);
+        for (String w: trans) {
+            values = new ContentValues();
+            values.put("word", w);
+            getContentResolver().insert(secondaryUri, values);
+        }
         Log.i(TAG, String.format("Added word " + trans));
         return new AddWordResult<String, Long, Integer>(word, wordId, position);
     }

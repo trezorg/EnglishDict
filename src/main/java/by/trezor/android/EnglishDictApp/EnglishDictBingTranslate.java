@@ -13,13 +13,13 @@ public class EnglishDictBingTranslate {
         this.clientKey = clientKey;
     }
 
-    String translate(String text, String from, String to) throws Exception {
+    String[] translate(String text, String from, String to) throws Exception {
         return translate(text, Language.fromString(from), Language.fromString(to));
     }
 
-    String translate(String text, Language from, Language to) throws Exception {
+    String[] translate(String text, Language from, Language to) throws Exception {
         Translate.setClientId(clientId);
         Translate.setClientSecret(clientKey);
-        return Translate.execute(text, from, to);
+        return Translate.executeMany(text, from, to);
     }
 }
