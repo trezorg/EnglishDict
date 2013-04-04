@@ -20,6 +20,7 @@
     <string name="reset">Сбросить</string>
     <string name="search_hint">Искать слово</string>
     <string name="words_add">Добавить слово</string>
+    <string name="translate_enter">Введите переведённое слово</string>
     <string name="speak">Говорите</string>
     <string name="image_content_description">Поиск</string>
     <string name="sound_content_description">Звук</string>
@@ -34,4 +35,8 @@
     <string name="pronunciation_checkbox_summary">Произносить английские слова при листании страниц</string>
     <string name="settings_title">Насторойки приложения</string>
     <string name="settings_summary">Насторойки EnglishDict приложения</string>
+    <string name="training_words_count">%s в базе</string>
+    <string name="training_category_name">Настройки тренировок</string>
+    <string name="training_words_number_title">Слов за тренировку</string>
+    <string name="training_words_number_summary">Сколько слов за одну тренировку</string>
 </resources>

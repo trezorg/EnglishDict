@@ -25,6 +25,7 @@
     <string name="sort">Sort</string>
     <string name="search_hint">Search word</string>
     <string name="words_add">Add word</string>
+    <string name="translate_enter">Enter a translated word</string>
     <string name="speak">Speak</string>
     <string name="image_content_description">Search</string>
     <string name="sound_content_description">Sound</string>
@@ -41,4 +42,8 @@
     <string name="pronunciation_category_name">Pronunciation settings</string>
     <string name="pronunciation_checkbox_title">Pronounce words</string>
     <string name="pronunciation_checkbox_summary">Pronounce english words when the activity is slided</string>
+    <string name="training_category_name">Training settings</string>
+    <string name="training_words_number_title">Words per a training</string>
+    <string name="training_words_number_summary">How much words will be proposed for the training</string>
+    <string name="training_words_count">%s in the base</string>
 </resources>

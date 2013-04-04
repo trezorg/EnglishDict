@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.*;
 import android.widget.ListView;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.training.EnglishDictTrainingChoiceActivity;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -202,6 +203,9 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
             case R.id.menu_settings:
                 showPreferences(this);
                 return true;
+            case R.id.menu_training:
+                showTrainingActivity();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -339,6 +343,12 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
         Intent intent = new Intent(this, EnglishDictDetailActivity.class);
         intent.putExtras(bundle);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
+
+    void showTrainingActivity() {
+        Intent intent = new Intent(this, EnglishDictTrainingChoiceActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
     }
 

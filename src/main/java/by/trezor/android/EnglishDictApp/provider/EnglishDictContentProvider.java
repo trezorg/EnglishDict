@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.*;
 
@@ -29,6 +30,10 @@ public class EnglishDictContentProvider extends ContentProvider {
     private static final int ENGLISH_DETAIL_WORD_ID = 6;
     private static final int RUSSIAN_DETAIL_WORDS = 7;
     private static final int RUSSIAN_DETAIL_WORD_ID = 8;
+    private static final int ENGLISH_RANDOM_WORDS = 9;
+    private static final int RUSSIAN_RANDOM_WORDS = 10;
+    private static final int ENGLISH_TRAINING_WORDS = 11;
+    private static final int RUSSIAN_TRAINING_WORDS = 12;
     public static final String ENGLISH_WORDS_TABLE_NAME = "english";
     public static final String RUSSIAN_WORDS_TABLE_NAME = "russian";
     public static final String RELATION_TABLE_NAME = "english_russian";
@@ -57,6 +62,14 @@ public class EnglishDictContentProvider extends ContentProvider {
                 EnglishDictDescriptor.AUTHORITY,
                 EnglishDictDescriptor.EnglishDictDetailEnglishWords.WORDS_NAME + "/#",
                 ENGLISH_DETAIL_WORD_ID);
+        sUriMatcher.addURI(
+                EnglishDictDescriptor.AUTHORITY,
+                EnglishDictDescriptor.EnglishDictRandomEnglishWords.WORDS_NAME,
+                ENGLISH_RANDOM_WORDS);
+        sUriMatcher.addURI(
+                EnglishDictDescriptor.AUTHORITY,
+                EnglishDictDescriptor.EnglishDictTrainingEnglishWords.WORDS_NAME,
+                ENGLISH_TRAINING_WORDS);
         // russian words
         sUriMatcher.addURI(
                 EnglishDictDescriptor.AUTHORITY,
@@ -74,6 +87,14 @@ public class EnglishDictContentProvider extends ContentProvider {
                 EnglishDictDescriptor.AUTHORITY,
                 EnglishDictDescriptor.EnglishDictDetailRussianWords.WORDS_NAME + "/#",
                 RUSSIAN_DETAIL_WORD_ID);
+        sUriMatcher.addURI(
+                EnglishDictDescriptor.AUTHORITY,
+                EnglishDictDescriptor.EnglishDictRandomRussianWords.WORDS_NAME,
+                RUSSIAN_RANDOM_WORDS);
+        sUriMatcher.addURI(
+                EnglishDictDescriptor.AUTHORITY,
+                EnglishDictDescriptor.EnglishDictTrainingRussianWords.WORDS_NAME,
+                RUSSIAN_TRAINING_WORDS);
     }
 
     private EnglishDictDbHelper englishDictDbHelper;
@@ -92,31 +113,77 @@ public class EnglishDictContentProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String where, String[] whereArgs, String sortOrder) {
+    public Cursor query(Uri uri, String[] projection, String where,
+                        String[] whereArgs, String sortOrder) {
         // If no sort order is specified use the default
         String orderBy;
+        int match = sUriMatcher.match(uri);
+        // random query
+        if (Arrays.asList(ENGLISH_RANDOM_WORDS, RUSSIAN_RANDOM_WORDS).contains(match)) {
+            return getRandomCursor(
+                    match, uri, projection, where, whereArgs, sortOrder);
+        }
+        if (Arrays.asList(ENGLISH_TRAINING_WORDS, RUSSIAN_TRAINING_WORDS).contains(match)) {
+            return getTrainingCursor(
+                    match, uri, projection, where, whereArgs, sortOrder);
+        }
         String queryOrderBy = uri.getQueryParameter(
                 EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_PARAM_ORDER_BY);
         if (TextUtils.isEmpty(sortOrder)) {
             if (queryOrderBy == null || queryOrderBy.isEmpty()) {
-                orderBy = EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER.WORD.toString();
+                orderBy = EnglishDictDescriptor.EnglishDictBaseColumns.
+                        SORT_ORDER.WORD.toString();
             } else {
                 orderBy = queryOrderBy;
             }
         } else {
             orderBy = sortOrder;
         }
-        int match = sUriMatcher.match(uri);
-        if (Arrays.asList(ENGLISH_WORDS, RUSSIAN_WORDS, ENGLISH_WORD_ID, RUSSIAN_WORD_ID).contains(match)) {
+        if (Arrays.asList(ENGLISH_WORDS, RUSSIAN_WORDS,
+                ENGLISH_WORD_ID, RUSSIAN_WORD_ID).contains(match)) {
             return getMainCursor(match, uri, projection, where, whereArgs, orderBy);
         } else {
             return getDetailCursor(match, uri, projection, where, whereArgs, orderBy);
         }
     }
 
+    private Cursor getRandomCursor(int match, Uri uri, String[] projection,
+                                     String where, String[] whereArgs, String sortOrder) {
+        String table = getTableName(match);
+        int limit;
+        String limitText = uri.getQueryParameter(
+                EnglishDictDescriptor.EnglishDictBaseColumns.LIMIT);
+        if (limitText == null) {
+            limit = EnglishDictDescriptor.EnglishDictBaseColumns.DEFAULT_RANDOM_LIMIT;
+        } else {
+            try {
+                limit = Integer.parseInt(limitText);
+            } catch (NumberFormatException ex) {
+                limit = EnglishDictDescriptor.EnglishDictBaseColumns.DEFAULT_RANDOM_LIMIT;
+            }
+        }
+        sortOrder = "RANDOM() LIMIT " + limit;
+        return db.query(table, projection, where, whereArgs, null, null, sortOrder);
+    }
+
+    private Cursor getTrainingCursor(int match, Uri uri, String[] projection,
+                                     String where, String[] whereArgs, String sortOrder) {
+        Cursor cursor;
+        String sqlQuery = getSqlQuery(match, projection);
+        if (where != null && !where.isEmpty()) {
+            sqlQuery += " AND " + where;
+        }
+        sqlQuery += " ORDER BY T1." + sortOrder;
+        Log.d("test", sqlQuery);
+        Log.d("test", sqlQuery);
+        Log.d("test", sqlQuery);
+        cursor = db.rawQuery(sqlQuery, whereArgs);
+        return cursor;
+    }
+
     private Cursor getMainCursor(int match, Uri uri, String[] projection,
                                  String where, String[] whereArgs, String sortOrder) {
-        Cursor c;
+        Cursor cursor;
         String table = getTableName(match);
         Uri contentUri = getContentUri(match);
         String queryText = uri.getQueryParameter(
@@ -130,13 +197,13 @@ public class EnglishDictContentProvider extends ContentProvider {
             case ENGLISH_WORDS:
             case RUSSIAN_WORDS:
                 // query the database for all words
-                c = db.query(table, projection, where, whereArgs,  null, null, sortOrder);
+                cursor = db.query(table, projection, where, whereArgs,  null, null, sortOrder);
                 break;
             case RUSSIAN_WORD_ID:
             case ENGLISH_WORD_ID:
                 // query the database for a specific word
                 long wordId = ContentUris.parseId(uri);
-                c = db.query(
+                cursor = db.query(
                         table,
                         projection,
                         EnglishDictDescriptor.EnglishDictBaseColumns._ID + " = " +
@@ -147,8 +214,8 @@ public class EnglishDictContentProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("unsupported uri: " + uri);
         }
-        c.setNotificationUri(getContext().getContentResolver(), contentUri);
-        return c;
+        cursor.setNotificationUri(getContext().getContentResolver(), contentUri);
+        return cursor;
     }
 
     private Cursor getDetailCursor(int match, Uri uri, String[] projection,
@@ -198,6 +265,8 @@ public class EnglishDictContentProvider extends ContentProvider {
             case RUSSIAN_WORDS:
             case ENGLISH_DETAIL_WORDS:
             case RUSSIAN_DETAIL_WORDS:
+            case ENGLISH_RANDOM_WORDS:
+            case RUSSIAN_RANDOM_WORDS:
                 return EnglishDictDescriptor.EnglishDictBaseColumns.CONTENT_TYPE;
             case ENGLISH_WORD_ID:
             case RUSSIAN_WORD_ID:
@@ -209,12 +278,14 @@ public class EnglishDictContentProvider extends ContentProvider {
         }
     }
 
-    private String getEnglishSqlSquery(String projection) {
-        return String.format(SQL_QUERY, ENGLISH_WORDS_TABLE_NAME, RUSSIAN_WORDS_TABLE_NAME, projection);
+    private String getEnglishSqlQuery(String projection) {
+        return String.format(SQL_QUERY, ENGLISH_WORDS_TABLE_NAME,
+                RUSSIAN_WORDS_TABLE_NAME, projection);
     }
 
-    private String getRussianSqlSquery(String projection) {
-        return String.format(SQL_QUERY, RUSSIAN_WORDS_TABLE_NAME, ENGLISH_WORDS_TABLE_NAME, projection);
+    private String getRussianSqlQuery(String projection) {
+        return String.format(SQL_QUERY, RUSSIAN_WORDS_TABLE_NAME,
+                ENGLISH_WORDS_TABLE_NAME, projection);
     }
 
     private String prepareSqlProjection(String[] projection) {
@@ -229,11 +300,13 @@ public class EnglishDictContentProvider extends ContentProvider {
     private String getSqlQuery(int match, String[] projection) {
         switch (match) {
             case ENGLISH_DETAIL_WORDS:
+            case ENGLISH_TRAINING_WORDS:
             case ENGLISH_DETAIL_WORD_ID:
-                return getEnglishSqlSquery(prepareSqlProjection(projection));
+                return getEnglishSqlQuery(prepareSqlProjection(projection));
             case RUSSIAN_DETAIL_WORDS:
+            case RUSSIAN_TRAINING_WORDS:
             case RUSSIAN_DETAIL_WORD_ID:
-                return getRussianSqlSquery(prepareSqlProjection(projection));
+                return getRussianSqlQuery(prepareSqlProjection(projection));
             default:
                 throw new IllegalArgumentException("Unknown url match: " + match);
         }
@@ -269,11 +342,15 @@ public class EnglishDictContentProvider extends ContentProvider {
             case ENGLISH_DETAIL_WORDS:
             case ENGLISH_WORD_ID:
             case ENGLISH_DETAIL_WORD_ID:
+            case ENGLISH_RANDOM_WORDS:
+            case ENGLISH_TRAINING_WORDS:
                 return ENGLISH_WORDS_TABLE_NAME;
             case RUSSIAN_WORDS:
             case RUSSIAN_DETAIL_WORDS:
             case RUSSIAN_WORD_ID:
             case RUSSIAN_DETAIL_WORD_ID:
+            case RUSSIAN_RANDOM_WORDS:
+            case RUSSIAN_TRAINING_WORDS:
                 return RUSSIAN_WORDS_TABLE_NAME;
             default:
                 throw new IllegalArgumentException("Unknown identifier: " + match);

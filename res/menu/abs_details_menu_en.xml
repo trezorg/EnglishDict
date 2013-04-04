@@ -11,11 +11,13 @@
         android:id="@+id/menu_detail_previous"
         android:icon="@drawable/ic_previous"
         android:showAsAction="always"
+        android:visible="false"
         />
     <item
         android:id="@+id/menu_detail_next"
         android:icon="@drawable/ic_next"
         android:showAsAction="always"
+        android:visible="false"
         />
     <item
         android:id="@+id/menu_add"

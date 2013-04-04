@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 
@@ -39,15 +38,15 @@ public class EnglishDictGoogleVoice {
         void onError(String message);
     }
 
-    void addOnExecuteListener(OnExecuteListener listener) {
+    public void addOnExecuteListener(OnExecuteListener listener) {
         onExecuteListener.add(listener);
     }
 
-    void setOnErrorListener(OnErrorListener listener) {
+    public void setOnErrorListener(OnErrorListener listener) {
         onErrorListener = listener;
     }
 
-    OnErrorListener getOnErrorListener() {
+    public OnErrorListener getOnErrorListener() {
         return onErrorListener;
     }
 
@@ -92,7 +91,21 @@ public class EnglishDictGoogleVoice {
         return localPath;
     }
 
-    void setContext(Context context) {
+    public void prepareVoiceFile(String word) throws IOException {
+        String localPath = checkFile(word, DICTIONARY_FILES_DIRECTORY);
+        if (localPath == null && context != null && isNetworkAvailable(context)) {
+            String url = getUrlEnglishVoiceUrl(word);
+            downloadFile(url, word, DICTIONARY_FILES_DIRECTORY);
+        }
+    }
+
+    public void prepareVoiceFiles(String[] words) throws IOException {
+        for (String word: words) {
+            prepareVoiceFile(word);
+        }
+    }
+
+    public void setContext(Context context) {
         if (this.context == null) {
             this.context = context;
         }
@@ -112,7 +125,7 @@ public class EnglishDictGoogleVoice {
         }
     }
 
-    void play(String[] words) {
+    public void play(String[] words) {
         isNetworkAvailable = isNetworkAvailable(context);
         // add words to wordsQueue
         wordsQueue.addAll(Arrays.asList(words));
@@ -141,7 +154,7 @@ public class EnglishDictGoogleVoice {
         } catch (IllegalStateException ignored) {}
     }
 
-    synchronized void finish() {
+    public synchronized void finish() {
         if (mediaPlayer != null) {
             try {
                 if (isPlaying()) {

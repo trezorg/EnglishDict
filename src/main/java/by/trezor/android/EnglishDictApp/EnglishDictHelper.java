@@ -25,6 +25,7 @@ import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -40,21 +41,25 @@ public class EnglishDictHelper {
     public static final String ENGLISH_WORDS_NAME = "en";
     public static final String RUSSIAN_WORDS_NAME = "ru";
     public static final String PLAY_SOUND_ON_SLIDE = "PLAY_SOUND_ON_SLIDE";
+    public static final String TRAINING_WORDS_COUNT = "TRAINING_WORDS_COUNT";
     public static final SparseArray<String> LANG_MAP = new SparseArray<String>() {{
         put(ENGLISH_WORDS, ENGLISH_WORDS_NAME);
         put(RUSSIAN_WORDS, RUSSIAN_WORDS_NAME);
     }};
     public static final String[] PROJECTION = new String[] {
             EnglishDictDescriptor.EnglishDictBaseColumns.WORD,
-            EnglishDictDescriptor.EnglishDictBaseColumns._ID
+            EnglishDictDescriptor.EnglishDictBaseColumns._ID,
+            EnglishDictDescriptor.EnglishDictBaseColumns.RATING
     };
 
     static private Toast mToast;
-    public  static final String WORD = "word";
-    public  static final String WORD_ID = "word_id";
-    public  static final String WORD_POSITION = "word_position";
-    public  static final String ORDERING = "ordering";
-    public  static final String LANG_TYPE = "lang_type";
+    static public final String WORD = "word";
+    static public final String WORD_ID = "word_id";
+    static public final String WORD_POSITION = "word_position";
+    static public final String ORDERING = "ordering";
+    static public final String LANG_TYPE = "lang_type";
+    static public final String RATING = "rating";
+    static public int TRAINING_VIEW_PAGER_COUNT = 5;
     static final private String RUSSIAN_LETTERS =
             "[-,абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]";
     static final private String ENGLISH_LETTERS =
@@ -105,6 +110,21 @@ public class EnglishDictHelper {
             sb.append(d);
         }
         return sb.toString()+r[i];
+    }
+
+    public static <T> String join(Iterable<T> iterable, String d) {
+        Iterator it = iterable.iterator();
+        if (!it.hasNext()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        String prefix = "";
+        while (it.hasNext()) {
+            sb.append(prefix);
+            prefix = d;
+            sb.append(it.next());
+        }
+        return sb.toString();
     }
 
     public static <T> boolean contains( final T[] array, final T v ) {
@@ -228,7 +248,7 @@ public class EnglishDictHelper {
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
     }
 
-    static void showToast(Context context, String message) {
+    public static void showToast(Context context, String message) {
         if (mToast == null || mToast.getView().getWindowVisibility() != View.VISIBLE) {
             mToast = Toast.makeText(context.getApplicationContext(), message, Toast.LENGTH_SHORT);
         } else {
@@ -239,8 +259,22 @@ public class EnglishDictHelper {
 
     static boolean isPronouncedSound(Context context) {
         Context applicationContext = context.getApplicationContext();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext);
+        SharedPreferences preferences =
+                PreferenceManager.getDefaultSharedPreferences(applicationContext);
         return preferences.getBoolean(PLAY_SOUND_ON_SLIDE, true);
+    }
+
+    public static int getTrainingWordsSetting(Context context) {
+        Context applicationContext = context.getApplicationContext();
+        SharedPreferences preferences = PreferenceManager.
+                getDefaultSharedPreferences(applicationContext);
+        String count = preferences.getString(
+                TRAINING_WORDS_COUNT, Integer.toString(TRAINING_VIEW_PAGER_COUNT));
+        try {
+            return Integer.parseInt(count);
+        } catch (NumberFormatException ex) {
+            return TRAINING_VIEW_PAGER_COUNT;
+        }
     }
 
     static void showPreferences(Activity activity) {
@@ -257,7 +291,6 @@ public class EnglishDictHelper {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
-
 
     static class AddWordAsyncTask extends AsyncTask<Void, Void, AddWordAsyncTask.AddWordResult<String, Long, Integer>> {
 

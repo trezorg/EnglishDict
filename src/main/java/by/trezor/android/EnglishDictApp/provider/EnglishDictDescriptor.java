@@ -55,12 +55,13 @@ public class EnglishDictDescriptor {
         public static final String QUERY_PARAM_ORDER_BY = ORDER_BY;
         public static final String QUERY_RELATION_NAME = "relationId";
         public static final String RATING = "rating";
+        public static final String LIMIT = "limit";
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/vnd.english.items";
         public static final String CONTENT_WORD_TYPE =
                 "vnd.android.cursor.item/vnd.english.item";
+        public static final int DEFAULT_RANDOM_LIMIT = 4;
         public static final int __ID = 0;
-        public static final int __WORD = 1;
     }
 
     public static final class EnglishDictEnglishWords extends EnglishDictBaseColumns {
@@ -101,4 +102,47 @@ public class EnglishDictDescriptor {
 
         public static final Uri CONTENT_URI = WORDS_URI;
     }
+
+    public static final class EnglishDictRandomEnglishWords extends EnglishDictBaseColumns {
+
+        public static final String WORDS_NAME = "englishRandom";
+
+        public static final Uri WORDS_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + WORDS_NAME);
+
+        public static final Uri CONTENT_URI = WORDS_URI;
+
+    }
+
+    public static final class EnglishDictRandomRussianWords extends EnglishDictBaseColumns {
+
+        public static final String WORDS_NAME = "russianRandom";
+
+        public static final Uri WORDS_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + WORDS_NAME);
+
+        public static final Uri CONTENT_URI = WORDS_URI;
+    }
+
+    public static final class EnglishDictTrainingEnglishWords extends EnglishDictBaseColumns {
+
+        public static final String WORDS_NAME = "englishTraining";
+
+        public static final Uri WORDS_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + WORDS_NAME);
+
+        public static final Uri CONTENT_URI = WORDS_URI;
+
+    }
+
+    public static final class EnglishDictTrainingRussianWords extends EnglishDictBaseColumns {
+
+        public static final String WORDS_NAME = "russianTraining";
+
+        public static final Uri WORDS_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + WORDS_NAME);
+
+        public static final Uri CONTENT_URI = WORDS_URI;
+    }
+
 }

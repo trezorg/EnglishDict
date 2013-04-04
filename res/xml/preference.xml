@@ -9,5 +9,14 @@
             android:defaultValue="true"
             />
     </PreferenceCategory>
-
+    <PreferenceCategory android:title="@string/training_category_name">
+        <EditTextPreference
+            android:key="TRAINING_WORDS_COUNT"
+            android:title="@string/training_words_number_title"
+            android:summary="@string/training_words_number_summary"
+            android:defaultValue="@integer/default_training_words_number"
+            android:numeric="integer"
+            android:maxLength="2"
+            />
+    </PreferenceCategory>
 </PreferenceScreen>

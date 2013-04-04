@@ -21,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.training.EnglishDictTrainingChoiceActivity;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.app.SherlockListFragment;
@@ -110,9 +111,18 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
             case R.id.menu_detail_next:
                 mPager.setCurrentItem(mPager.getCurrentItem() + 1);
                 return true;
+            case R.id.menu_training:
+                showTrainingActivity();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    void showTrainingActivity() {
+        Intent intent = new Intent(this, EnglishDictTrainingChoiceActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        startActivity(intent);
     }
 
     private void setCurrentWord() {

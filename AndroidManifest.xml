@@ -37,6 +37,8 @@
         </activity>
         <activity android:name=".EnglishDictPreferenceFragmentActivity"/>
         <activity android:name=".EnglishDictPreferenceActivity"/>
+        <activity android:name=".training.EnglishDictTrainingActivity"/>
+        <activity android:name=".training.EnglishDictTrainingChoiceActivity"/>
     </application>
 </manifest>
 
