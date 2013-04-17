@@ -79,13 +79,9 @@ public class EnglishDictDetailFragment extends SherlockListFragment implements
     }
 
     private Loader<Cursor> getLoaderCursor() {
-        return new CursorLoader(getSherlockActivity(), getContentUri(), getProjection(), null, null, null) {
-            @Override
-            protected void onStartLoading() {
-                super.onStartLoading();
-                showProgressBar();
-            }
-        };
+        showProgressBar();
+        return new CursorLoader(getSherlockActivity(), getContentUri(),
+                getProjection(), null, null, null);
     }
 
     @Override
@@ -225,17 +221,21 @@ public class EnglishDictDetailFragment extends SherlockListFragment implements
         builder.show();
     }
 
-    void showProgressBar() {
+
+    void ensureProgressBar() {
         if (mProgressBar == null) {
             mProgressBar = (ProgressBar)getView().findViewById(R.id.progress_bar);
         }
+    }
+
+    void showProgressBar() {
+        ensureProgressBar();
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
     void dismissProgressBar() {
-        if (mProgressBar != null) {
-            mProgressBar.setVisibility(View.INVISIBLE);
-        }
+        ensureProgressBar();
+        mProgressBar.setVisibility(View.INVISIBLE);
     }
 
     String getCurrentLangNames() {

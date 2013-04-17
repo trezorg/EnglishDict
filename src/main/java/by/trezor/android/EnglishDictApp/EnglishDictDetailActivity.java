@@ -82,7 +82,8 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
         com.actionbarsherlock.view.MenuInflater inflate = getSupportMenuInflater();
         inflate.inflate(getAbsMenuLayout(), menu);
         menu.findItem(R.id.menu_detail_previous).setVisible(mPager.getCurrentItem() > 0);
-        menu.findItem(R.id.menu_detail_next).setVisible(mPager.getCurrentItem() != mPagerAdapter.getCount() - 1);
+        menu.findItem(R.id.menu_detail_next).setVisible(
+                mPager.getCurrentItem() != mPagerAdapter.getCount() - 1);
         prepareActionBar(getCurrentWord(), getCurrentLangType());
         mHandler.removeCallbacksAndMessages(null);
         mHandler.postDelayed(new Runnable() {
@@ -296,7 +297,8 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
         }
 
         private Cursor getCursor() {
-            return getContentResolver().query(getContentUri(), getProjection() ,null, null, null);
+            return getContentResolver().query(getContentUri(),
+                    getProjection() ,null, null, null);
         }
 
         public String getCurrentWord() {
