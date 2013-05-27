@@ -198,10 +198,11 @@ public class EnglishDictTrainingActivity extends SherlockFragmentActivity {
         private Cursor getCursor() {
             if (cursor == null) {
                 cursor = getContentResolver().query(
-                        getContentUri(), getProjection(),
-                        null, null,
-                        EnglishDictDescriptor.EnglishDictBaseColumns.RATING
-                                + " LIMIT " + wordsCount
+                        getContentUri(),
+                        getProjection(),
+                        null,
+                        null,
+                        EnglishDictDescriptor.EnglishDictBaseColumns.RATING  + " LIMIT " + wordsCount
                 );
             }
             return cursor;

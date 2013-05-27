@@ -148,7 +148,8 @@ public class EnglishDictContentProvider extends ContentProvider {
     }
 
     private Cursor getRandomCursor(int match, Uri uri, String[] projection,
-                                     String where, String[] whereArgs, String sortOrder) {
+                                     String where, String[] whereArgs,
+                                     String sortOrder) {
         String table = getTableName(match);
         int limit;
         String limitText = uri.getQueryParameter(
@@ -173,10 +174,7 @@ public class EnglishDictContentProvider extends ContentProvider {
         if (where != null && !where.isEmpty()) {
             sqlQuery += " AND " + where;
         }
-        sqlQuery += " ORDER BY T1." + sortOrder;
-        Log.d("test", sqlQuery);
-        Log.d("test", sqlQuery);
-        Log.d("test", sqlQuery);
+        sqlQuery += " GROUP BY T1.word ORDER BY T1." + sortOrder;
         cursor = db.rawQuery(sqlQuery, whereArgs);
         return cursor;
     }
