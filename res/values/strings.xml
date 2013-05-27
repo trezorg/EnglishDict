@@ -47,6 +47,6 @@
     <string name="training_words_number_summary">How much words will be proposed for the training</string>
     <string name="training_words_count">%s in the base</string>
     <string name="training_result_text">Right %1$s from %2$s</string>
-    <string name="training_once_more">Continue training</string>
+    <string name="training_once_more">Continue</string>
     <string name="training_stop">Exit</string>
 </resources>

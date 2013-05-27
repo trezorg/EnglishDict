@@ -25,7 +25,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:gravity="center"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:layout_below="@id/training_result">
         <Button
             android:id="@+id/training_once_more"
