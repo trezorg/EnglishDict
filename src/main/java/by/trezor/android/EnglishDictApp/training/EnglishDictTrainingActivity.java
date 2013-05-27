@@ -53,6 +53,10 @@ public class EnglishDictTrainingActivity extends SherlockFragmentActivity {
                 if (!mPagerAdapter.isPassedPosition()) {
                     setViewPagerEnabled(false);
                 }
+                if (position == mPagerAdapter.getCount() - 1) {
+                    setViewPagerEnabled(true);
+                    mPagerAdapter.invalidateResullFragment();
+                }
             }
         });
     }
@@ -154,15 +158,26 @@ public class EnglishDictTrainingActivity extends SherlockFragmentActivity {
         private int records;
         private SparseArray<String> registeredWords = new SparseArray<String>();
         private SparseArray<Boolean> passedPositions = new SparseArray<Boolean>();
+        private SparseArray<Fragment> fragments = new SparseArray<Fragment>();
+        private int wordsCount;
         private Cursor cursor;
 
         public EnglishDictTrainingAdapter(FragmentManager fm) {
             super(fm);
+            wordsCount = getTrainingWordsSetting(EnglishDictTrainingActivity.this);
             records = getCursor().getCount();
         }
 
         @Override
         public Fragment getItem(int position) {
+            if (position == records) {
+                Fragment fragment = new EnglishDictTrainingResultFragment();
+                Bundle args = new Bundle();
+                args.putInt(LANG_TYPE, getCurrentLangType());
+                fragment.setArguments(args);
+                fragments.put(position, fragment);
+                return fragment;
+            }
             Fragment fragment = new EnglishDictTrainingFragment();
             Cursor cursor = getCursor();
             cursor.moveToPosition(position);
@@ -176,17 +191,17 @@ public class EnglishDictTrainingActivity extends SherlockFragmentActivity {
             args.putInt(LANG_TYPE, getCurrentLangType());
             args.putInt(RATING, rating);
             fragment.setArguments(args);
+            fragments.put(position, fragment);
             return fragment;
         }
 
         private Cursor getCursor() {
             if (cursor == null) {
-                int number = getTrainingWordsSetting(EnglishDictTrainingActivity.this);
                 cursor = getContentResolver().query(
                         getContentUri(), getProjection(),
                         null, null,
                         EnglishDictDescriptor.EnglishDictBaseColumns.RATING
-                                + " LIMIT " + number
+                                + " LIMIT " + wordsCount
                 );
             }
             return cursor;
@@ -202,8 +217,32 @@ public class EnglishDictTrainingActivity extends SherlockFragmentActivity {
             return registeredWords.get(mPager.getCurrentItem());
         }
 
+        public Fragment getCurrentFragment() {
+            return fragments.get(mPager.getCurrentItem());
+        }
+
+        public void invalidateResullFragment() {
+            ((EnglishDictTrainingResultFragment) getCurrentFragment()).
+                    invalidate(getPassedWords(), getWordsCount());
+        }
+
+
         public boolean isPassedPosition() {
             return passedPositions.get(mPager.getCurrentItem()) != null;
+        }
+
+        public int getPassedWords() {
+            int count = 0;
+            int key;
+            for(int i = 0; i < passedPositions.size(); i++) {
+                key = passedPositions.keyAt(i);
+                if (passedPositions.get(key)) count++;
+            }
+            return count;
+        }
+
+        public int getWordsCount() {
+            return wordsCount;
         }
 
         public void addPassedPosition(int position, boolean value) {
@@ -214,11 +253,12 @@ public class EnglishDictTrainingActivity extends SherlockFragmentActivity {
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
             registeredWords.remove(position);
+            fragments.remove(position);
         }
 
         @Override
         public int getCount() {
-            return records;
+            return records + 1;
         }
     }
 }

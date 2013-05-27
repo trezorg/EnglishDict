@@ -191,9 +191,7 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
 
     private void transferAnswerView() {
         View view = getRightAnswerView();
-        if (view == null) {
-            return;
-        }
+        if (view == null) { return; }
         ((ViewGroup) view.getParent()).removeView(view);
         view.setBackgroundResource(
                 R.drawable.training_right_answer_background);

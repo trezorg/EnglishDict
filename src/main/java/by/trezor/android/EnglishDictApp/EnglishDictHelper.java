@@ -57,6 +57,8 @@ public class EnglishDictHelper {
     static public final String WORD_ID = "word_id";
     static public final String WORD_POSITION = "word_position";
     static public final String ORDERING = "ordering";
+    static public final String ALL_WORDS = "all_words";
+    static public final String RIGHT_WORDS = "right_words";
     static public final String LANG_TYPE = "lang_type";
     static public final String RATING = "rating";
     static public int TRAINING_VIEW_PAGER_COUNT = 5;

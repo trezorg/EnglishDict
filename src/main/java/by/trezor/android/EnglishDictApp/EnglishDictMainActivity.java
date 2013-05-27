@@ -32,7 +32,6 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
 
     private static final String TAG = EnglishDictMainActivity.class.getSimpleName();
     private static final String LIST_STATE = "listState";
-    private static final String LIST_LANG = "listLang";
     private int mLangType = ENGLISH_WORDS;
     private SORT_ORDER mOrder = SORT_ORDER.WORD;
     private MenuItem mSearchMenuItem;
@@ -64,7 +63,7 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
         // Save instance-specific state
         mListState = getListView().onSaveInstanceState();
         state.putParcelable(LIST_STATE, mListState);
-        state.putInt(LIST_LANG, getCurrentLangType());
+        state.putInt(LANG_TYPE, getCurrentLangType());
         super.onSaveInstanceState(state);
     }
 
@@ -72,7 +71,7 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
     protected void onRestoreInstanceState(Bundle state) {
         // Save instance-specific state
         mListState = state.getParcelable(LIST_STATE);
-        setCurrentLangType(state.getInt(LIST_LANG, ENGLISH_WORDS));
+        setCurrentLangType(state.getInt(LANG_TYPE, ENGLISH_WORDS));
         super.onRestoreInstanceState(state);
     }
 
@@ -432,7 +431,7 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
     private int getLangType(Bundle state) {
         int type = ENGLISH_WORDS;
         if (state != null) {
-            type = state.getInt(LIST_LANG, ENGLISH_WORDS);
+            type = state.getInt(LANG_TYPE, ENGLISH_WORDS);
         }
         return type == RUSSIAN_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS;
     }

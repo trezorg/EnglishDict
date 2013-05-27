@@ -39,4 +39,7 @@
     <string name="training_category_name">Настройки тренировок</string>
     <string name="training_words_number_title">Слов за тренировку</string>
     <string name="training_words_number_summary">Сколько слов за одну тренировку</string>
+    <string name="training_result_text">Правильно %1$s из %2$s</string>
+    <string name="training_once_more">Продолжить тренировку</string>
+    <string name="training_stop">Выйти</string>
 </resources>

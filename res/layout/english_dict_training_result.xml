@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_centerHorizontal="true"
+    >
+
+    <TextView
+        android:id="@+id/training_result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="24sp"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:layout_alignWithParentIfMissing="false"
+        android:layout_centerInParent="true"
+        >
+    </TextView>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_below="@id/training_result">
+        <Button
+            android:id="@+id/training_once_more"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/training_once_more"/>
+
+        <Button
+            android:id="@+id/training_stop"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/training_stop"/>
+    </LinearLayout>
+
+</RelativeLayout>
