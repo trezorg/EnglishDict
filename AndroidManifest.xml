@@ -39,6 +39,7 @@
         <activity android:name=".EnglishDictPreferenceActivity"/>
         <activity android:name=".training.EnglishDictTrainingActivity"/>
         <activity android:name=".training.EnglishDictTrainingChoiceActivity"/>
+        <service android:name=".service.EnglishDictGoogleVoiceService"/>
     </application>
 </manifest>
 

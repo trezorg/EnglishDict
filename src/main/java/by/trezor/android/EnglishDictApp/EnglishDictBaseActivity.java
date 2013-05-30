@@ -367,68 +367,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
         setListAdapter(mAdapter);
     }
 
-    String getSoundWord(int pos) {
-        return ((Cursor)(getListAdapter().getItem(pos))).getString(0);
-    }
-
-    private int getViewPosition(View view) {
-        try {
-            return getListView().getPositionForView((LinearLayout)view.getParent());
-        } catch (Exception ex) {
-            return -1;
-        }
-    }
-
-    public void playSound(final View view) {
-        final LinearLayout parent = (LinearLayout)view.getParent();
-        final ProgressBar progressBar =
-                (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected void onPreExecute() {
-                progressBar.setVisibility(View.VISIBLE);
-                view.setVisibility(View.GONE);
-            }
-            @Override
-            protected Void doInBackground(Void... args) {
-                final EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
-                final Activity activity = getActivity();
-                voice.setContext(activity);
-                voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
-                    @Override
-                    public void onExecute() {
-                        activity.runOnUiThread(new Runnable() {
-                            public void run() {
-                                progressBar.setVisibility(View.GONE);
-                                view.setVisibility(View.VISIBLE);
-                            }
-                        });
-                    }
-                });
-                if (voice.getOnErrorListener() == null) {
-                    voice.setOnErrorListener(new EnglishDictGoogleVoice.OnErrorListener() {
-                        @Override
-                        public void onError(final String message) {
-                            activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    showToast(getActivity(), message);
-                                }
-                            });
-                        }
-                    });
-                }
-                final int position = getViewPosition(view);
-                String word = getSoundWord(position);
-                if (word ==  null || word.isEmpty()) {
-                    voice.finish();
-                    return  null;
-                }
-                voice.play(word.split("\\s+"));
-                return null;
-            }
-        }.execute();
-    }
-
     AlertDialog getAddAlertDialog() {
         if (mAddAlertDialog == null) {
             mAddAlertDialog = showAddWordActivity();

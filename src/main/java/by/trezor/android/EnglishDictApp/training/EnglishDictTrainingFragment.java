@@ -4,16 +4,17 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
+import android.os.*;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
 import by.trezor.android.EnglishDictApp.EnglishDictGoogleVoice;
 import by.trezor.android.EnglishDictApp.R;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.service.EnglishDictGoogleVoiceService;
 import com.actionbarsherlock.app.SherlockFragment;
 
 import java.io.IOException;
@@ -226,7 +227,7 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(final View view) {
-                        playSound(view, true);
+                        playSound(view);
                     }
                 });
     }
@@ -258,7 +259,7 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
                 } else {
                     state = true;
                     if (mLangType != RUSSIAN_WORDS) {
-                        playSound(voiceButton, true);
+                        playSound(voiceButton);
                     } else {
                         playSound(word, true);
                     }
@@ -363,62 +364,38 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
         populateRandomWords();
     }
 
-    final void playSound(final View view, final boolean cancel) {
+
+    public final void playSound(final View view) {
         final ViewGroup parent = (ViewGroup)view.getParent();
         final ProgressBar progressBar =
                 (ProgressBar)parent.findViewById(R.id.progress_bar_sound);
-        final EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
-        new AsyncTask<Void, Void, Void>() {
+        progressBar.setVisibility(View.VISIBLE);
+        view.setVisibility(View.GONE);
+        final String word = getSoundWord();
+        if (word ==  null || word.isEmpty()) {
+            progressBar.setVisibility(View.GONE);
+            view.setVisibility(View.VISIBLE);
+            return;
+        }
+        final Handler handler = new Handler() {
             @Override
-            protected void onPreExecute() {
-                progressBar.setVisibility(View.VISIBLE);
-                view.setVisibility(View.GONE);
+            public void handleMessage(Message message) {
+                Object err = message.obj;
+                int status = message.what;
+                progressBar.setVisibility(View.GONE);
+                view.setVisibility(View.VISIBLE);
+                if (status == Activity.RESULT_CANCELED && err != null) {
+                    showToast(getActivity(), err.toString());
+                }
+                this.removeCallbacksAndMessages(null);
             }
-            @Override
-            protected Void doInBackground(Void... args) {
-                if (isCancelled()) {
-                    return null;
-                }
-                final Activity activity = getActivity();
-                voice.setContext(activity);
-                if (cancel) {
-                    voice.finish();
-                }
-                voice.addOnExecuteListener(new EnglishDictGoogleVoice.OnExecuteListener() {
-                    @Override
-                    public void onExecute() {
-                        activity.runOnUiThread(new Runnable() {
-                            public void run() {
-                                progressBar.setVisibility(View.GONE);
-                                view.setVisibility(View.VISIBLE);
-                            }
-                        });
-                    }
-                });
-                if (voice.getOnErrorListener() == null) {
-                    voice.setOnErrorListener(new EnglishDictGoogleVoice.OnErrorListener() {
-                        @Override
-                        public void onError(final String message) {
-                            activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    showToast(activity, message);
-                                }
-                            });
-                        }
-                    });
-                }
-                if (isCancelled()) {
-                    return null;
-                }
-                voice.play(getSoundWord().split("\\s+"));
-                return null;
-            }
-
-            @Override
-            protected void onCancelled(Void result) {
-                voice.finish();
-            }
-        }.execute();
+        };
+        Intent intent = new Intent(getActivity(), EnglishDictGoogleVoiceService.class);
+        Messenger messenger = new Messenger(handler);
+        intent.putExtra(PARAM_MESSAGER, messenger);
+        intent.putExtra(PARAM_WORD, word);
+        intent.putExtra(PARAM_NETWORK_AVAILABLE, isNetworkAvailable(getActivity()));
+        getSherlockActivity().startService(intent);
     }
 
     final void playSound(final String word, final boolean cancel) {

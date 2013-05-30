@@ -22,8 +22,7 @@ public class EnglishDictGoogleVoice {
     private MediaPlayer mediaPlayer;
     private Queue<String> mediaQueue = new ConcurrentLinkedQueue<String>();
     private Queue<String> wordsQueue = new ConcurrentLinkedQueue<String>();
-    private Queue<OnExecuteListener> onExecuteListener =
-            new ConcurrentLinkedQueue<OnExecuteListener>();
+    private Queue<OnExecuteListener> onExecuteListener = new ConcurrentLinkedQueue<OnExecuteListener>();
     private OnErrorListener onErrorListener;
     private Context context;
     private boolean isNetworkAvailable;
@@ -92,8 +91,9 @@ public class EnglishDictGoogleVoice {
     }
 
     public void prepareVoiceFile(String word) throws IOException {
+        if (context != null) setIsNetworkAvailable(isNetworkAvailable(context));
         String localPath = checkFile(word, DICTIONARY_FILES_DIRECTORY);
-        if (localPath == null && context != null && isNetworkAvailable(context)) {
+        if (localPath == null && isNetworkAvailable) {
             String url = getUrlEnglishVoiceUrl(word);
             downloadFile(url, word, DICTIONARY_FILES_DIRECTORY);
         }
@@ -111,6 +111,10 @@ public class EnglishDictGoogleVoice {
         }
     }
 
+    public void setIsNetworkAvailable(Boolean value) {
+        isNetworkAvailable = value;
+    }
+
     void prepareFile(String word) {
         if (word == null) {
             return;
@@ -126,7 +130,7 @@ public class EnglishDictGoogleVoice {
     }
 
     public void play(String[] words) {
-        isNetworkAvailable = isNetworkAvailable(context);
+        if (context != null) setIsNetworkAvailable(isNetworkAvailable(context));
         // add words to wordsQueue
         wordsQueue.addAll(Arrays.asList(words));
         if (!isPlaying()) {

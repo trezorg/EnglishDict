@@ -25,6 +25,7 @@ import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -70,10 +71,19 @@ public class EnglishDictHelper {
             "^(" + RUSSIAN_LETTERS + "+\\p{Z})*" + RUSSIAN_LETTERS + "*$";
     static final public String ENGLISH_LETTERS_REGEXP =
             "^(" + ENGLISH_LETTERS + "+\\p{Z})*" + ENGLISH_LETTERS + "*$";
-    static final Pattern RUSSIAN_LETTERS_PATTERN =
+    public static final Pattern RUSSIAN_LETTERS_PATTERN =
             Pattern.compile(RUSSIAN_LETTERS_REGEXP);
-    static final Pattern ENGLISH_LETTERS_PATTERN =
+    public static final Pattern ENGLISH_LETTERS_PATTERN =
             Pattern.compile(ENGLISH_LETTERS_REGEXP);
+    public final static String PARAM_STATUS = "status";
+    public final static String PARAM_MESSAGE = "message";
+    public final static String PARAM_WORD = "word";
+    public final static String PARAM_TYPE = "type";
+    public final static String PARAM_MESSAGER = "messager";
+    public final static int VOICE_TYPE = 0;
+    public final static String PARAM_NETWORK_AVAILABLE = "isNetworkAvailable";
+    public final static String BROADCAST_ACTION = "by.trezor.android.EnglishDictApp.EnglishDictMainActivity";
+
 
     private EnglishDictHelper() {}
 
@@ -175,13 +185,26 @@ public class EnglishDictHelper {
             throws IOException {
         File dictionaryRoot = new File(
                 Environment.getExternalStorageDirectory(), dir);
-        File dictionaryDirFile = new File(dictionaryRoot, fileName.substring(0,1));
+        File dictionaryDirFile = new File(dictionaryRoot, fileName.substring(0, 1));
         if (!dictionaryDirFile.exists()) {
             if (!dictionaryDirFile.mkdirs()) {
                 throw new IOException("Cannot create directory: " + dictionaryDirFile);
             }
         }
-        return new File(dictionaryDirFile, fileName + ".mp3").getAbsolutePath();
+        return new File(dictionaryDirFile, fileName + ".mp3").getCanonicalPath();
+    }
+
+    static public String prepareTmpFilePath(String fileName, String dir)
+            throws IOException {
+        File dictionaryRoot = new File(
+                Environment.getExternalStorageDirectory(), dir);
+        File dictionaryDirFile = new File(dictionaryRoot, "tmp");
+        if (!dictionaryDirFile.exists()) {
+            if (!dictionaryDirFile.mkdirs()) {
+                throw new IOException("Cannot create directory: " + dictionaryDirFile);
+            }
+        }
+        return new File(dictionaryDirFile, fileName + ".mp3").getCanonicalPath();
     }
 
     static public String downloadFile(String downloadUrl, String fileName, String dir)
@@ -196,7 +219,8 @@ public class EnglishDictHelper {
             throw new IOException("Cannot read url: " + downloadUrl);
         }
         String filePath = prepareFilePath(fileName, dir);
-        FileOutputStream fileOutput = new FileOutputStream(filePath);
+        String tmpFilePath = prepareTmpFilePath(fileName, dir);
+        FileOutputStream fileOutput = new FileOutputStream(tmpFilePath);
         BufferedInputStream inputStream =
                 new BufferedInputStream(urlConnection.getInputStream());
         byte[] buffer = new byte[1024];
@@ -205,7 +229,34 @@ public class EnglishDictHelper {
             fileOutput.write(buffer, 0, bufferLength);
         }
         fileOutput.close();
+        // move tmp to destination
+        copyFile(new File(tmpFilePath), new File(filePath));
         return filePath;
+    }
+
+    public static void copyFile(File sourceFile, File destFile) throws IOException {
+        if(!destFile.exists()) {
+            if (!destFile.createNewFile()) {
+                throw new IOException("Cannot create file: " + destFile.getCanonicalFile());
+            }
+        }
+        FileChannel source = null;
+        FileChannel destination = null;
+        try {
+            source = new FileInputStream(sourceFile).getChannel();
+            destination = new FileOutputStream(destFile).getChannel();
+            long count = 0;
+            long size = source.size();
+            while ((count += destination.transferFrom(source, count, size - count)) < size);
+        }
+        finally {
+            if(source != null) {
+                source.close();
+            }
+            if(destination != null) {
+                destination.close();
+            }
+        }
     }
 
     static public String checkFile(String fileName, String dir) {
@@ -279,7 +330,7 @@ public class EnglishDictHelper {
         }
     }
 
-    static void showPreferences(Activity activity) {
+    public static void showPreferences(Activity activity) {
         Class c = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB ?
                 EnglishDictPreferenceActivity.class :
                 EnglishDictPreferenceFragmentActivity.class;
@@ -287,7 +338,7 @@ public class EnglishDictHelper {
         activity.startActivityForResult(intent, SHOW_PREFERENCES);
     }
 
-    static boolean isNetworkAvailable(Context context) {
+    public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();

@@ -6,13 +6,15 @@ import android.app.SearchManager;
 import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Parcelable;
+import android.os.*;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.*;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.service.EnglishDictGoogleVoiceService;
 import by.trezor.android.EnglishDictApp.training.EnglishDictTrainingChoiceActivity;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
@@ -38,6 +40,8 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
     private boolean isSearch;
     private static final int LOADER_ID = 0;
     private Parcelable mListState = null;
+    private BroadcastReceiver br;
+
 
     @Override
     public void onCreate(Bundle state) {
@@ -46,10 +50,19 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
         setContentView(R.layout.english_dict_list);
         setViewAdapter();
         handleIntent(getIntent());
+        registerBroadcastReceiver();
         setTabs();
         registerForContextMenu(getListView());
         getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (br != null) {
+            unregisterReceiver(br);
+        }
     }
 
     @Override
@@ -434,5 +447,68 @@ public class EnglishDictMainActivity extends EnglishDictBaseActivity implements 
             type = state.getInt(LANG_TYPE, ENGLISH_WORDS);
         }
         return type == RUSSIAN_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS;
+    }
+
+    private int getViewPosition(View view) {
+        try {
+            return getListView().getPositionForView((LinearLayout)view.getParent());
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
+    private String getSoundWord(int pos) {
+        return ((Cursor)(getListAdapter().getItem(pos))).getString(0);
+    }
+
+    public final void playSound(final View view) {
+        final LinearLayout parent = (LinearLayout) view.getParent();
+        final ProgressBar progressBar =
+                (ProgressBar) parent.findViewById(R.id.progress_bar_sound);
+        progressBar.setVisibility(View.VISIBLE);
+        view.setVisibility(View.GONE);
+        final int position = getViewPosition(view);
+        final String word = getSoundWord(position);
+        if (word ==  null || word.isEmpty()) {
+            progressBar.setVisibility(View.GONE);
+            view.setVisibility(View.VISIBLE);
+            return;
+        }
+        final Handler handler = new Handler() {
+            @Override
+            public void handleMessage(Message message) {
+                Object err = message.obj;
+                int status = message.what;
+                progressBar.setVisibility(View.GONE);
+                view.setVisibility(View.VISIBLE);
+                if (status == Activity.RESULT_CANCELED && err != null) {
+                    showToast(getActivity(), err.toString());
+                }
+                this.removeCallbacksAndMessages(null);
+            }
+        };
+        Intent intent = new Intent(getActivity(), EnglishDictGoogleVoiceService.class);
+        Messenger messenger = new Messenger(handler);
+        intent.putExtra(PARAM_MESSAGER, messenger);
+        intent.putExtra(PARAM_WORD, word);
+        intent.putExtra(PARAM_NETWORK_AVAILABLE, isNetworkAvailable(getActivity()));
+        startService(intent);
+    }
+
+    private void registerBroadcastReceiver() {
+        br = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                int status = intent.getIntExtra(PARAM_STATUS, Activity.RESULT_CANCELED);
+                int type = intent.getIntExtra(PARAM_TYPE, VOICE_TYPE);
+                if (type == VOICE_TYPE) {
+                    String message = intent.getStringExtra(PARAM_MESSAGE);
+                    if (status == Activity.RESULT_CANCELED && message != null) {
+                        showToast(getActivity(), message);
+                    }
+                }
+            }
+        };
+        IntentFilter intFilter = new IntentFilter(BROADCAST_ACTION);
+        registerReceiver(br, intFilter);
     }
 }
