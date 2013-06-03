@@ -20,7 +20,11 @@ import android.view.*;
 import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictDetailEnglishWords;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictDetailRussianWords;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictEnglishWords;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictRussianWords;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.app.SherlockListFragment;
 
@@ -369,34 +373,31 @@ public class EnglishDictDetailFragment extends SherlockListFragment implements
         Uri uri;
         switch (type) {
             case ENGLISH_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictDetailEnglishWords.CONTENT_URI;
+                uri = EnglishDictDetailEnglishWords.CONTENT_URI;
                 break;
             case RUSSIAN_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictDetailRussianWords.CONTENT_URI;
+                uri = EnglishDictDetailRussianWords.CONTENT_URI;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown type: " + type);
         }
-        return Uri.parse(uri + "?" +
-                EnglishDictDescriptor.EnglishDictBaseColumns.QUERY_RELATION_NAME +
-                "=" + id);
+        return Uri.parse(uri + "?" + EnglishDictBaseColumns.QUERY_RELATION_NAME + "=" + id);
     }
 
     Uri getMainContentUri(int type, String search) {
         Uri uri;
         switch (type) {
             case ENGLISH_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictEnglishWords.CONTENT_URI;
+                uri = EnglishDictEnglishWords.CONTENT_URI;
                 break;
             case RUSSIAN_WORDS:
-                uri = EnglishDictDescriptor.EnglishDictRussianWords.CONTENT_URI;
+                uri = EnglishDictRussianWords.CONTENT_URI;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown type: " + type);
         }
         if (search == null || search.isEmpty()) { return uri; }
-        String queryString = EnglishDictDescriptor.
-                EnglishDictBaseColumns.QUERY_PARAM_NAME + "=" + Uri.encode(search);
+        String queryString = EnglishDictBaseColumns.QUERY_PARAM_NAME + "=" + Uri.encode(search);
         return Uri.parse(uri + "?" + queryString);
     }
 
@@ -447,7 +448,6 @@ public class EnglishDictDetailFragment extends SherlockListFragment implements
         Log.i(TAG, String.format("Added word " + word));
         return new AddWordResult<String, Long, Integer>(word, wordId, position);
     }
-
 
     void performAddActions(final String text) {
         final ProgressDialog progressDialog = new ProgressDialog(getSherlockActivity());

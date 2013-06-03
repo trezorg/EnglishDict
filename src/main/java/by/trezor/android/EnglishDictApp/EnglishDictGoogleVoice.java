@@ -45,10 +45,6 @@ public class EnglishDictGoogleVoice {
         onErrorListener = listener;
     }
 
-    public OnErrorListener getOnErrorListener() {
-        return onErrorListener;
-    }
-
     public static EnglishDictGoogleVoice getInstance() {
         EnglishDictGoogleVoice localInstance = instance;
         if (localInstance == null) {
@@ -130,7 +126,10 @@ public class EnglishDictGoogleVoice {
     }
 
     public void play(String[] words) {
-        if (context != null) setIsNetworkAvailable(isNetworkAvailable(context));
+        if (context != null) {
+            setIsNetworkAvailable(isNetworkAvailable(context));
+            setVolume(context, 70);
+        }
         // add words to wordsQueue
         wordsQueue.addAll(Arrays.asList(words));
         if (!isPlaying()) {

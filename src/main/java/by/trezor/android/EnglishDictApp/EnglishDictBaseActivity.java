@@ -20,12 +20,10 @@ import android.text.Spanned;
 import android.view.inputmethod.InputMethodManager;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 
-import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
-import static by.trezor.android.EnglishDictApp.EnglishDictHelper.AddWordAsyncTask.AddWordResult;
 
 
 public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListActivity implements
@@ -131,40 +129,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
             default:
                 return super.onContextItemSelected(item);
         }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case RESULT_SPEECH: {
-                if (resultCode == RESULT_OK && data != null) {
-                    ArrayList<String> text =
-                            data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    createSpeechChoiceDialog(text);
-                }
-                break;
-            }
-
-        }
-    }
-
-    void createSpeechChoiceDialog(final ArrayList<String> text) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        CharSequence[] choice = text.toArray(new CharSequence[text.size()]);
-        builder.setTitle(R.string.choice_variant).
-                setSingleChoiceItems(choice, 0, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String word = text.get(which);
-                AlertDialog alertDialog = getAddAlertDialog();
-                EditText editText = (EditText)
-                        alertDialog.findViewById(R.id.add_popup_input);
-                editText.setText(word);
-                dialog.dismiss();
-            }
-        });
-        builder.show();
     }
 
     void showProgressBar() {
@@ -377,8 +341,6 @@ public abstract class EnglishDictBaseActivity extends EnglishDictFragmentListAct
     }
 
     abstract Activity getActivity();
-
-    abstract AddWordResult<String, Long, Integer> performAddAsync(String text);
 
     abstract void performAddActions(String text);
 

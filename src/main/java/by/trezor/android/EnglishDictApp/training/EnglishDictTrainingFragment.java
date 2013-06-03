@@ -1,6 +1,5 @@
 package by.trezor.android.EnglishDictApp.training;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -14,6 +13,7 @@ import android.widget.*;
 import by.trezor.android.EnglishDictApp.EnglishDictGoogleVoice;
 import by.trezor.android.EnglishDictApp.R;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.service.EnglishDictGoogleVoiceHandler;
 import by.trezor.android.EnglishDictApp.service.EnglishDictGoogleVoiceService;
 import com.actionbarsherlock.app.SherlockFragment;
 
@@ -34,6 +34,7 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
     private ProgressBar mProgressBar;
     private Map<String, Integer> mWords;
     private List<String> mAnswerWords;
+    private EnglishDictGoogleVoiceHandler handler = new EnglishDictGoogleVoiceHandler();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -261,7 +262,7 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
                     if (mLangType != RUSSIAN_WORDS) {
                         playSound(voiceButton);
                     } else {
-                        playSound(word, true);
+                        playSound(word);
                     }
                 }
                 transferAnswerView();
@@ -377,19 +378,8 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
             view.setVisibility(View.VISIBLE);
             return;
         }
-        final Handler handler = new Handler() {
-            @Override
-            public void handleMessage(Message message) {
-                Object err = message.obj;
-                int status = message.what;
-                progressBar.setVisibility(View.GONE);
-                view.setVisibility(View.VISIBLE);
-                if (status == Activity.RESULT_CANCELED && err != null) {
-                    showToast(getActivity(), err.toString());
-                }
-                this.removeCallbacksAndMessages(null);
-            }
-        };
+        handler.setContent(getSherlockActivity());
+        handler.addViewPair(progressBar, view);
         Intent intent = new Intent(getActivity(), EnglishDictGoogleVoiceService.class);
         Messenger messenger = new Messenger(handler);
         intent.putExtra(PARAM_MESSAGER, messenger);
@@ -398,43 +388,14 @@ public class EnglishDictTrainingFragment extends SherlockFragment {
         getSherlockActivity().startService(intent);
     }
 
-    final void playSound(final String word, final boolean cancel) {
-        final EnglishDictGoogleVoice voice = EnglishDictGoogleVoice.getInstance();
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... args) {
-                if (isCancelled()) {
-                    return null;
-                }
-                final Activity activity = getActivity();
-                voice.setContext(activity);
-                if (cancel) {
-                    voice.finish();
-                }
-                if (voice.getOnErrorListener() == null) {
-                    voice.setOnErrorListener(new EnglishDictGoogleVoice.OnErrorListener() {
-                        @Override
-                        public void onError(final String message) {
-                            activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    showToast(activity, message);
-                                }
-                            });
-                        }
-                    });
-                }
-                if (isCancelled()) {
-                    return null;
-                }
-                voice.play(word.split("\\s+"));
-                return null;
-            }
-
-            @Override
-            protected void onCancelled(Void result) {
-                voice.finish();
-            }
-        }.execute();
+    public final void playSound(final String word) {
+        handler.setContent(getSherlockActivity());
+        Intent intent = new Intent(getActivity(), EnglishDictGoogleVoiceService.class);
+        Messenger messenger = new Messenger(handler);
+        intent.putExtra(PARAM_MESSAGER, messenger);
+        intent.putExtra(PARAM_WORD, word);
+        intent.putExtra(PARAM_NETWORK_AVAILABLE, isNetworkAvailable(getActivity()));
+        getSherlockActivity().startService(intent);
     }
 
     private String getSoundWord() {

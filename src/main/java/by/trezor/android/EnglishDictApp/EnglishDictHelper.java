@@ -23,10 +23,13 @@ import android.widget.Toast;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -58,8 +61,6 @@ public class EnglishDictHelper {
     static public final String WORD_ID = "word_id";
     static public final String WORD_POSITION = "word_position";
     static public final String ORDERING = "ordering";
-    static public final String ALL_WORDS = "all_words";
-    static public final String RIGHT_WORDS = "right_words";
     static public final String LANG_TYPE = "lang_type";
     static public final String RATING = "rating";
     static public int TRAINING_VIEW_PAGER_COUNT = 5;
@@ -80,6 +81,8 @@ public class EnglishDictHelper {
     public final static String PARAM_WORD = "word";
     public final static String PARAM_TYPE = "type";
     public final static String PARAM_MESSAGER = "messager";
+    public final static String PARAM_POSITION = "position";
+    public final static int DEFAULT_POSITION = -1;
     public final static int VOICE_TYPE = 0;
     public final static String PARAM_NETWORK_AVAILABLE = "isNetworkAvailable";
     public final static String BROADCAST_ACTION = "by.trezor.android.EnglishDictApp.EnglishDictMainActivity";
@@ -139,11 +142,39 @@ public class EnglishDictHelper {
         return sb.toString();
     }
 
-    public static <T> boolean contains( final T[] array, final T v ) {
+    public static <T> boolean contains(final T[] array, final T v) {
         for (final T e : array) {
-            if (e == v || v != null && v.equals(e)) { return true; }
+            if (e == v || (v != null && v.equals(e))) return true;
         }
         return false;
+    }
+
+    public static Object[] getArray(Object val){
+        int len = Array.getLength(val);
+        Object[] outputArray = new Object[len];
+        for(int i = 0; i < len; ++i){
+            outputArray[i] = Array.get(val, i);
+        }
+        return outputArray;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> getList(Object... items){
+        List<T> list = new ArrayList<T>();
+        if (items.length == 1 && items[0].getClass().isArray()) {
+            int length = Array.getLength(items[0]);
+            for (int i = 0; i < length; i++) {
+                Object element = Array.get(items[0], i);
+                T item = (T)element;
+                list.add(item);
+            }
+        } else {
+            for (Object i : items) {
+                T item = (T)i;
+                list.add(item);
+            }
+        }
+        return list;
     }
 
     static public String replaceNotExpectedPattern(String text, Pattern pattern, String repl) {
@@ -162,23 +193,6 @@ public class EnglishDictHelper {
 
     static public String replaceNotExpectedPattern(String text, Pattern pattern) {
         return replaceNotExpectedPattern(text, pattern, null);
-    }
-
-    static public String[] translate(String clientId, String clientKey, String text, int from, int to) {
-        EnglishDictBingTranslate trans = new EnglishDictBingTranslate(clientId, clientKey);
-        try {
-            return trans.translate(text, LANG_MAP.get(from), LANG_MAP.get(to));
-        } catch (Exception ex) {
-            Log.d(TAG, "Translate error", ex);
-            return null;
-        }
-    }
-
-    static public String[] translate(Context context, String text, int from) {
-        int to = from == ENGLISH_WORDS ? RUSSIAN_WORDS : ENGLISH_WORDS;
-        String clientId = context.getResources().getString(R.string.translateClientId);
-        String clientKey = context.getResources().getString(R.string.translateClientKey);
-        return translate(clientId, clientKey, text, from, to);
     }
 
     static public String prepareFilePath(String fileName, String dir)
@@ -259,6 +273,11 @@ public class EnglishDictHelper {
         }
     }
 
+    static public boolean areAllTrue(boolean[] array) {
+        for (boolean b : array) if(!b) return false;
+        return true;
+    }
+
     static public String checkFile(String fileName, String dir) {
         File dictionaryRoot = new File(
                 Environment.getExternalStorageDirectory(), dir);
@@ -297,7 +316,8 @@ public class EnglishDictHelper {
         AudioManager audioManager =
                 (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
         int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        int volume = (maxVolume * percent) / 100;
+        int volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        //int volume = (maxVolume * percent) / 100;
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
     }
 

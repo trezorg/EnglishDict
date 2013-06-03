@@ -27,6 +27,10 @@
     <string name="dict_text">Словать</string>
     <string name="training_text">Тренировка</string>
     <string name="choice_variant">Выберите вариант</string>
+    <string name="translate_select_words">Выберите слова</string>
+    <string name="translate_no_chosen_words">Вы не выбрали ни одного слова</string>
+    <string name="translate_chose_all_words">Выбрать все</string>
+    <string name="translate_no_found_words">Подходящие слова не были найдены</string>
     <string name="speech_support">Ваше устройство не поддерживает технологию Speech To Text</string>
     <string name="order_name">Имя</string>
     <string name="order_rating">Рейтинг</string>

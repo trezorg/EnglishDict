@@ -11,12 +11,15 @@ import net.sf.dict4j.entity.Database;
 import net.sf.dict4j.entity.Definition;
 import net.sf.dict4j.entity.DatabaseWord;
 
+
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
 
-class EnglishDictDict4j {
+
+public class EnglishDictDict4j {
 
     private DictSession session;
     static private final String DICT_SERVER = "dict.mova.org";
+    static private final int MAX_RESULTS = 20;
 
     public static enum EnglishDictDict4jBase {
 
@@ -24,21 +27,17 @@ class EnglishDictDict4j {
         RU (1);
 
         private final String base;
-        private final int lang;
         private final Pattern pattern;
-        private static final int EN_LANG = 0;
-        private static final int RU_LANG = 1;
         private static final String EN_BASE = "en-ru";
         private static final String RU_BASE = "ru-en";
 
         EnglishDictDict4jBase(int lang) {
-            this.lang = lang;
-            if (lang == RU_LANG) {
+            if (lang == RUSSIAN_WORDS) {
                 this.base = RU_BASE;
-                this.pattern = RUSSIAN_LETTERS_PATTERN;
+                this.pattern = ENGLISH_LETTERS_PATTERN;
             } else {
                 this.base = EN_BASE;
-                this.pattern = ENGLISH_LETTERS_PATTERN;
+                this.pattern = RUSSIAN_LETTERS_PATTERN;
             }
         }
 
@@ -56,18 +55,20 @@ class EnglishDictDict4j {
         session.open("hello");
     }
 
-    private Collection<String> parseDefenition(String text, EnglishDictDict4jBase base) {
+    private Collection<String> parseDefinition(String text, EnglishDictDict4jBase base) {
         String answer = text.replaceAll("(?ms)^\\w+$", "").replaceAll("(?ms)^\\s+|\\s+$", "");
         String[] lines = answer.split("\\d+>");
         Collection<String> result = new HashSet<String>();
         for (String line: lines) {
             String part = line.replaceAll("_\\S+", "").trim();
             if (part.isEmpty()) continue;
-            String[] parts = part.trim().split("[;\n]");
+            String[] parts = part.trim().split("[;\n,]");
             for (String str: parts) {
                 String s = str.trim();
                 if (s.isEmpty()) continue;                
-                if (base.getPattern().matcher(s).matches()) result.add(s);
+                if (base.getPattern().matcher(s).matches()) {
+                    result.add(s);
+                }
             }
         }
         return result;
@@ -77,7 +78,7 @@ class EnglishDictDict4j {
         List<Definition> defs = session.define(word, base.getDataBase());
         Collection<String> result = new HashSet<String>();
         for (Definition def: defs) {
-            result.addAll(parseDefenition(def.getText(), base));
+            result.addAll(parseDefinition(def.getText(), base));
         }
         List<String> lst = new ArrayList<String>();
         lst.addAll(result);
@@ -97,11 +98,26 @@ class EnglishDictDict4j {
         return words;
     }
 
-    public List<String> getWords(String word, int lang) {
+    public List<String> getWords(String word, int lang, int maxResults) {
         openSession();
-        List<String> res = getDefenition(word, EnglishDictDict4jBase.valueOf(
-                lang == EnglishDictDict4jBase.RU_LANG ? "RU" : "EN"));
+        List<String> res = getDefenition(word, lang == RUSSIAN_WORDS ?
+                EnglishDictDict4jBase.RU : EnglishDictDict4jBase.EN);
         closeSession();
+        if (res.size() > maxResults) res = res.subList(0, maxResults);
         return res;
     }
+
+    public List<String> getWords(String word, int lang) {
+        return getWords(word, lang, MAX_RESULTS);
+
+    }
+
+    public static void main(String[] args) {
+        EnglishDictDict4j dict = new EnglishDictDict4j();
+        List<String> list = dict.getWords("prime", ENGLISH_WORDS);
+        for (String st: list) {
+            System.out.println(st);
+        }
+    }
+
 }

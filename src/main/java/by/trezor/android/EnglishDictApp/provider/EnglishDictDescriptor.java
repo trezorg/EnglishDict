@@ -54,6 +54,7 @@ public class EnglishDictDescriptor {
         public static final String QUERY_PARAM_NAME = WORD;
         public static final String QUERY_PARAM_ORDER_BY = ORDER_BY;
         public static final String QUERY_RELATION_NAME = "relationId";
+        public static final String QUERY_RELATION_WORD = "relationWord";
         public static final String RATING = "rating";
         public static final String LIMIT = "limit";
         public static final String CONTENT_TYPE =
@@ -145,4 +146,24 @@ public class EnglishDictDescriptor {
         public static final Uri CONTENT_URI = WORDS_URI;
     }
 
+    public static final class EnglishDictDetailByNameEnglishWords extends EnglishDictBaseColumns {
+
+        public static final String WORDS_NAME = "englishName";
+
+        public static final Uri WORDS_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + WORDS_NAME);
+
+        public static final Uri CONTENT_URI = WORDS_URI;
+
+    }
+
+    public static final class EnglishDictDetailByNameRussianWords extends EnglishDictBaseColumns {
+
+        public static final String WORDS_NAME = "russianName";
+
+        public static final Uri WORDS_URI = Uri.parse("content://" +
+                AUTHORITY + "/" + WORDS_NAME);
+
+        public static final Uri CONTENT_URI = WORDS_URI;
+    }
 }

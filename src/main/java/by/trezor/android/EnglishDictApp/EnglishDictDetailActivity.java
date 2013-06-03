@@ -19,6 +19,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor;
+import by.trezor.android.EnglishDictApp.service.EnglishDictGoogleVoiceHandler;
 import by.trezor.android.EnglishDictApp.service.EnglishDictGoogleVoiceService;
 import by.trezor.android.EnglishDictApp.training.EnglishDictTrainingChoiceActivity;
 import com.actionbarsherlock.app.ActionBar;
@@ -28,7 +29,7 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
 import static by.trezor.android.EnglishDictApp.EnglishDictHelper.*;
-import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.SORT_ORDER;
+import by.trezor.android.EnglishDictApp.provider.EnglishDictDescriptor.EnglishDictBaseColumns.*;
 
 
 public class EnglishDictDetailActivity extends SherlockFragmentActivity {
@@ -40,6 +41,7 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
     private ViewPager mPager;
     private EnglishDictStatePagerAdapter mPagerAdapter;
     private Handler mHandler = new Handler();
+    private EnglishDictGoogleVoiceHandler handler = new EnglishDictGoogleVoiceHandler(this);
 
     @Override
     public void onCreate(Bundle state) {
@@ -148,39 +150,36 @@ public class EnglishDictDetailActivity extends SherlockFragmentActivity {
                 (ProgressBar) parent.findViewById(R.id.progress_bar_sound);
         progressBar.setVisibility(View.VISIBLE);
         view.setVisibility(View.GONE);
-        final String word = getSoundWord(view);
+        final int position = getPosition(view);
+        final String word = getSoundWord(position);
         if (word ==  null || word.isEmpty()) {
             progressBar.setVisibility(View.GONE);
             view.setVisibility(View.VISIBLE);
             return;
         }
-        final Handler handler = new Handler() {
-            @Override
-            public void handleMessage(Message message) {
-                Object err = message.obj;
-                int status = message.what;
-                progressBar.setVisibility(View.GONE);
-                view.setVisibility(View.VISIBLE);
-                if (status == Activity.RESULT_CANCELED && err != null) {
-                    showToast(getActivity(), err.toString());
-                }
-                this.removeCallbacksAndMessages(null);
-            }
-        };
-        Intent intent = new Intent(getActivity(), EnglishDictGoogleVoiceService.class);
+        handler.addViewPair(position, progressBar, view);
+        Intent intent = new Intent(this, EnglishDictGoogleVoiceService.class);
         Messenger messenger = new Messenger(handler);
         intent.putExtra(PARAM_MESSAGER, messenger);
         intent.putExtra(PARAM_WORD, word);
+        intent.putExtra(PARAM_POSITION, position);
         intent.putExtra(PARAM_NETWORK_AVAILABLE, isNetworkAvailable(getActivity()));
         startService(intent);
     }
 
-    private String getSoundWord(View view) {
+    private int getPosition(View view) {
         if (getCurrentLangType() == RUSSIAN_WORDS) {
+            return -1;
+        }
+        ListFragment fragment = getCurrentFragment();
+        return fragment.getListView().getPositionForView((LinearLayout) view.getParent());
+    }
+
+    private String getSoundWord(int position) {
+        if (position == -1) {
             return mWord;
         }
         ListFragment fragment = getCurrentFragment();
-        int position = fragment.getListView().getPositionForView((LinearLayout) view.getParent());
         return ((Cursor)(fragment.getListAdapter().getItem(position))).getString(0);
     }
 

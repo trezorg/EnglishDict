@@ -45,12 +45,6 @@
             <type>jar</type>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.memetix</groupId>
-            <artifactId>microsoft-translator-java-api</artifactId>
-            <version>0.7-SNAPSHOT</version>
-            <type>jar</type>
-        </dependency>
     </dependencies>
 
     <build>
